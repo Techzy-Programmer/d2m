@@ -34,7 +34,7 @@ func main() {
 	mcon.Initialize()
 
 	app := &cli.App{
-		Name:  "ucd",
+		Name:  "d2m",
 		Usage: "Managr your deployments with ease",
 		Action: func(*cli.Context) error {
 			paint.Info("Hello, World!")

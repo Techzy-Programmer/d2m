@@ -4,14 +4,22 @@ import (
 	"encoding/json"
 	"log"
 	"os"
+	"path/filepath"
 	"reflect"
 
 	"github.com/Techzy-Programmer/d2m/config/paint"
+	"github.com/Techzy-Programmer/d2m/config/univ"
 )
 
-var configPath = "_config.json"
+var configFile string;
 
 func init() {
+	configPath, err := univ.GetUserConfigPath("d2m");
+	if err != nil {
+		log.Fatalf("Failed to get config path: %v", err)
+	}
+
+	configFile = filepath.Join(configPath, "_config.json")
 	ensureConfigExists()
 }
 
@@ -24,7 +32,7 @@ func GetData[T any](key string, def ...T) T {
 		defValue = def[0]
 	}
 
-	strData, err := os.ReadFile(configPath)
+	strData, err := os.ReadFile(configFile)
 	if err != nil {
 		log.Fatalf("Failed to read config file: %v", err)
 	}
@@ -46,7 +54,7 @@ func GetData[T any](key string, def ...T) T {
 // SetData sets data in the config file with the specified key and value.
 func SetData[T any](key string, value T) {
 	// Read existing config data
-	strData, err := os.ReadFile(configPath)
+	strData, err := os.ReadFile(configFile)
 	if err != nil {
 		log.Fatalf("Failed to read config file: %v", err)
 	}
@@ -66,7 +74,7 @@ func SetData[T any](key string, value T) {
 	}
 
 	// Write updated data to the file
-	err = os.WriteFile(configPath, jsonData, 0644)
+	err = os.WriteFile(configFile, jsonData, 0644)
 	if err != nil {
 		log.Fatalf("Failed to write config data: %v", err)
 	}
@@ -74,10 +82,18 @@ func SetData[T any](key string, value T) {
 
 // ensureConfigExists checks if the config file exists and creates it if not.
 func ensureConfigExists() {
-	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		paint.Info("Config file not found, creating a new one...")
+	configDir := filepath.Dir(configFile)
 
-		if err := os.WriteFile(configPath, []byte(`{}`), 0644); err != nil {
+	if _, err := os.Stat(configDir); os.IsNotExist(err) {
+		if err := os.MkdirAll(configDir, 0755); err != nil {
+			log.Fatalf("Failed to create config directory: %v", err)
+		}
+	}
+
+	if _, err := os.Stat(configFile); os.IsNotExist(err) {
+		paint.InfoF("Config file not found, creating \"%s\"...", configFile)
+
+		if err := os.WriteFile(configFile, []byte(`{}`), 0644); err != nil {
 			log.Fatalf("Failed to create config file: %v", err)
 		}
 	}
