@@ -1,0 +1,1 @@
+# ToDo: Script to build the project including static web-assets and the binary for production and release
