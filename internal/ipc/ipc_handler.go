@@ -30,10 +30,9 @@ func HandleConnection(conn net.Conn) {
 func processMsg(message msg.MSG, conn net.Conn) {
 	switch m := message.(type) {
 	case *msg.PingMSG:
-		paint.Info("Received Ping")
 		time.Sleep(10 * time.Second)
-		n := msg.SendMsg(conn, msg.PingMSG{Type: msg.PingMsgType})
-		paint.SuccessF("Sent > %d bytes : Type > "+m.Type, n)
+		msg.SendMsg(conn, msg.PingMSG{Type: msg.PingMsgType})
+		var _ = m.Type
 
 	default:
 		paint.Error("Unknown message received")

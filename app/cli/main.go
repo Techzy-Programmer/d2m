@@ -10,8 +10,8 @@ import (
 
 	"github.com/Techzy-Programmer/d2m/app/cli/mcon"
 	"github.com/Techzy-Programmer/d2m/app/daemon"
+	"github.com/Techzy-Programmer/d2m/cmd"
 	"github.com/Techzy-Programmer/d2m/config"
-	"github.com/Techzy-Programmer/d2m/config/paint"
 	"github.com/urfave/cli/v2"
 )
 
@@ -36,10 +36,7 @@ func main() {
 	app := &cli.App{
 		Name:  "d2m",
 		Usage: "Managr your deployments with ease",
-		Action: func(*cli.Context) error {
-			paint.Info("Hello, World!")
-			return nil
-		},
+		Action: cmd.HandleInitCMD,
 	}
 
 	if err := app.Run(os.Args); err != nil {

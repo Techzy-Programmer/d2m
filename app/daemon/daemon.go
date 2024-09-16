@@ -25,8 +25,8 @@ type daemonConfig struct {
 var dc daemonConfig
 
 func init() {
-	dc.apiPort = config.GetData("daemon.apiPort", "8080")
-	dc.uiPort = config.GetData("daemon.uiPort", "8000")
+	dc.apiPort = config.GetData("user.APIPort", "8080")
+	dc.uiPort = config.GetData("user.UIPort", "8000")
 }
 
 func LaunchDaemon() {

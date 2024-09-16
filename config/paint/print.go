@@ -15,3 +15,7 @@ func Warn(a ...interface{}) {
 func Success(a ...interface{}) {
 	success.Println(a...)
 }
+
+func Notice(a ...interface{}) {
+	notice.Println(a...)
+}

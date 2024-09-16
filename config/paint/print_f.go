@@ -21,3 +21,8 @@ func SuccessF(format string, a ...interface{}) {
 	success.Printf(format, a...)
 	fmt.Println()
 }
+
+func NoticeF(format string, a ...interface{}) {
+	notice.Printf(format, a...)
+	fmt.Println()
+}
