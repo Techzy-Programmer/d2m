@@ -32,6 +32,7 @@ func init() {
 func LaunchDaemon() {
 	fmt.Println("Spinning up the daemon process...")
 
+	go univ.ScheduleGHActionIPFetch()
 	go api.StartAPIServer(dc.apiPort)
 	go ui.StartUIServer(dc.uiPort)
 	go startDaemonTCPServer()

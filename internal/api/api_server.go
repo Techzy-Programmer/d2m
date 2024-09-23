@@ -8,12 +8,8 @@ import (
 func StartAPIServer(port string) {
 	router := gin.Default()
 
-	router.GET("/", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "Hello, World!",
-			"ok":      true,
-		})
-	})
+	router.POST("/deploy", HandleDeployment)
+	router.POST("/panel", HandlePanel)
 
 	router.Run(":" + port)
 	paint.Info("API server started at :" + port)
