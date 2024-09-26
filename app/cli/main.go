@@ -15,6 +15,8 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+// ToDo: Implement SQLite based storage config and other data structures
+
 func main() {
 	daemonFlag := flag.Bool("daemon", false, "Run as daemon")
 	flag.Parse()

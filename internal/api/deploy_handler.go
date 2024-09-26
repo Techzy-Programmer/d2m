@@ -17,7 +17,7 @@ import (
 )
 
 func HandleDeployment(c *gin.Context) {
-	// Following check ensures that request only gets through if coming from GitHun actions workflow
+	// Following check ensures that request only gets through if coming from GitHub actions workflow
 	// ToDo: Support custom CD servers and/or workflow runners
 	if !slices.Contains(univ.GHActionIps, c.ClientIP()) {
 		c.JSON(403, gin.H{
@@ -81,7 +81,7 @@ func HandleDeployment(c *gin.Context) {
 		return
 	}
 
-	flow.StartDeployment(req)
+	flow.StartDeployment(&req)
 
 	c.JSON(200, gin.H{
 		"message": "Deployment triggered successfully",
