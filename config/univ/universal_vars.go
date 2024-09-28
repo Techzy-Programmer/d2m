@@ -1,9 +1,13 @@
 package univ
 
+import "net"
+
 const (
-	DaemonPort = "2864";
+	Version = "0.1.0"
 )
 
 var (
-	GHActionIps = []string{}
+	AliveChannel     = make(chan bool)
+	GHActionIps      = []string{}
+	CLIConn net.Conn
 )

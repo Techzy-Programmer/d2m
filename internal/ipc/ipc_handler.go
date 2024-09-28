@@ -8,6 +8,7 @@ import (
 
 	"github.com/Techzy-Programmer/d2m/config/msg"
 	"github.com/Techzy-Programmer/d2m/config/paint"
+	"github.com/Techzy-Programmer/d2m/config/univ"
 )
 
 func HandleConnection(conn net.Conn) {
@@ -17,7 +18,7 @@ func HandleConnection(conn net.Conn) {
 	for {
 		data, err := reader.ReadString('\n') // Read until newline, well it's a delimiter
 		if err != nil {
-			paint.Error("Error reading from connection:", err)
+			// "Error reading from connection:", err
 			return
 		}
 
@@ -30,6 +31,13 @@ func HandleConnection(conn net.Conn) {
 func processMsg(message msg.MSG, conn net.Conn) {
 	switch m := message.(type) {
 	case *msg.PingMSG:
+		if m.IsWelcome {
+			// Notify CLI thread that daemon is alive
+			univ.AliveChannel <- true
+			close(univ.AliveChannel)
+			return
+		}
+
 		time.Sleep(10 * time.Second)
 		msg.SendMsg(conn, msg.PingMSG{Type: msg.PingMsgType})
 		var _ = m.Type

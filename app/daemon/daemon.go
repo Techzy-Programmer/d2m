@@ -6,6 +6,7 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	"github.com/Techzy-Programmer/d2m/config"
@@ -42,18 +43,23 @@ func LaunchDaemon() {
 
 	<-sigChan // Wait for a signal
 	config.SetData("daemon.PID", -1)
+	config.SetData("daemon.Port", "")
 }
 
 func startDaemonTCPServer() {
-	listener, err := net.Listen("tcp", ":"+univ.DaemonPort)
+	// Following will bind to a random port assigned by the OS
+	listener, err := net.Listen("tcp", ":0")
 
 	if err != nil {
 		log.Fatalf("Failed to start daemon tcp server: %v", err)
 	}
 
 	defer listener.Close()
-	paint.Info("Daemon server started at :" + univ.DaemonPort)
+	addrSegs := strings.Split(listener.Addr().String(), ":")
+	asgPort := addrSegs[len(addrSegs) - 1]
+	paint.Info("Daemon server started at :" + asgPort)
 	config.SetData("daemon.PID", os.Getpid())
+	config.SetData("daemon.Port", asgPort)
 
 	for {
 		conn, err := listener.Accept()
@@ -62,7 +68,7 @@ func startDaemonTCPServer() {
 			continue
 		}
 
-		msg.SendMsg(conn, msg.PingMSG{Type: msg.PingMsgType})
+		msg.SendMsg(conn, msg.PingMSG{Type: msg.PingMsgType, IsWelcome: true})
 		go ipc.HandleConnection(conn)
 	}
 }

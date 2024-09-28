@@ -3,15 +3,17 @@ package main
 import (
 	"flag"
 	"log"
+	"net"
 	"os"
 	"runtime"
 	"syscall"
 	"time"
 
-	"github.com/Techzy-Programmer/d2m/app/cli/mcon"
 	"github.com/Techzy-Programmer/d2m/app/daemon"
 	"github.com/Techzy-Programmer/d2m/cmd"
 	"github.com/Techzy-Programmer/d2m/config"
+	"github.com/Techzy-Programmer/d2m/config/univ"
+	"github.com/Techzy-Programmer/d2m/internal/ipc"
 	"github.com/gin-gonic/gin"
 	"github.com/urfave/cli/v2"
 )
@@ -39,9 +41,11 @@ func main() {
 
 	if !isProcessRunning(pid) {
 		ensureDaemonRunning()
-	}
 
-	mcon.Initialize()
+		if !connectToDaemon() {
+			panic("Unable to connect with daemon over TCP")
+		}
+	}
 
 	app := &cli.App{
 		Name:  "d2m",
@@ -57,7 +61,6 @@ func main() {
 }
 
 func isProcessRunning(pid float64) bool {
-	// ToDo: Implement TCP based ping to check if daemon is running
 	process, err := os.FindProcess(int(pid))
 
 	if err != nil {
@@ -65,9 +68,45 @@ func isProcessRunning(pid float64) bool {
 	}
 
 	if runtime.GOOS == "windows" {
-		return true
+		return checkTCPAlive()
 	}
 
 	sigErr := process.Signal(syscall.Signal(0))
-	return sigErr == nil
+	if sigErr == nil {
+		return checkTCPAlive()
+	}
+
+	return false 
+}
+
+// Function to check if it's really our own daemon service that's running with the given PID
+func checkTCPAlive() bool {
+	if !connectToDaemon() {
+		return false
+	}
+
+	select {
+	case <-univ.AliveChannel:
+		return true
+
+	case <-time.After(5 * time.Second):
+		univ.CLIConn.Close()
+		return false
+	}
+}
+
+func connectToDaemon() bool {
+	port := config.GetData[string]("daemon.Port")
+	if port == "" {
+		return false
+	}
+
+	conn, err := net.Dial("tcp", ":" + port)
+	if err != nil {
+		return false
+	}
+
+	go ipc.HandleConnection(conn)
+	univ.CLIConn = conn
+	return true
 }

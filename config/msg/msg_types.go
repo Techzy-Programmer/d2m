@@ -8,6 +8,7 @@ const (
 
 type PingMSG struct {
 	Type string
+	IsWelcome bool // Used by daemon on first connection
 }
 
 var typeRegistry = map[string] func() interface {} {
