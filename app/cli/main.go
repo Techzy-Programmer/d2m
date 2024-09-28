@@ -12,15 +12,18 @@ import (
 	"github.com/Techzy-Programmer/d2m/app/daemon"
 	"github.com/Techzy-Programmer/d2m/cmd"
 	"github.com/Techzy-Programmer/d2m/config"
+	"github.com/gin-gonic/gin"
 	"github.com/urfave/cli/v2"
 )
 
-var isDebug = false
+var Release string
 // ToDo: Implement SQLite based storage config and other data structures
 
 func main() {
-	if isDebug {
+	if Release != "prod" && Release != "" {
 		startDebug()
+	} else {
+		gin.SetMode(gin.ReleaseMode)
 	}
 
 	daemonFlag := flag.Bool("daemon", false, "Run as daemon")

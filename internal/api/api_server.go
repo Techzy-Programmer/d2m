@@ -1,6 +1,8 @@
 package api
 
 import (
+	"log"
+
 	"github.com/Techzy-Programmer/d2m/config/paint"
 	"github.com/gin-gonic/gin"
 )
@@ -11,6 +13,15 @@ func StartAPIServer(port string) {
 	router.POST("/deploy", HandleDeployment)
 	router.POST("/panel", HandlePanel)
 
-	router.Run(":" + port)
-	paint.Info("API server started at :" + port)
+	router.GET("/", func(c *gin.Context) {
+		c.JSON(404, gin.H{
+			"message": "Wohoo! Nothing to be found here",
+			"ok":      false,
+		})
+	})
+
+	paint.Info("Serving backend at :" + port)
+	if err := router.Run(":" + port); err != nil {
+		log.Fatal(err)
+	}
 }

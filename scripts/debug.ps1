@@ -16,7 +16,7 @@ $exePath = Join-Path $tempDir "$appName.exe"
 
 Write-Host "[GO]: Building the Go application..." -ForegroundColor Cyan
 # Build the Go application into the temp dir with debug flags
-go build -gcflags="all=-N -l" -o $exePath ./app/cli # Useful for debugging with "Delve"
+go build -gcflags="all=-N -l" -ldflags "-X 'main.Release=test'" -o $exePath ./app/cli # Useful for debugging with "Delve"
 
 if ($LASTEXITCODE -eq 0) { # Check if the go build was successful
   Write-Host "[GO]: Binary built successfully targeting `"$env:GOOS-$env:GOARCH`"" -ForegroundColor Green

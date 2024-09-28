@@ -1,28 +1,32 @@
 package paint
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/fatih/color"
+)
+
+func logF(logger *color.Color, format string, a ...interface{}) {
+	logger.Printf(format, a...)
+	fmt.Println()
+}
 
 func InfoF(format string, a ...interface{}) {
-	info.Printf(format, a...)
-	fmt.Println()
+	logF(info, format, a...)
 }
 
 func ErrorF(format string, a ...interface{}) {
-	err.Printf(format, a...)
-	fmt.Println()
+	logF(err, format, a...)
 }
 
 func WarnF(format string, a ...interface{}) {
-	warn.Printf(format, a...)
-	fmt.Println()
+	logF(warn, format, a...)
 }
 
 func SuccessF(format string, a ...interface{}) {
-	success.Printf(format, a...)
-	fmt.Println()
+	logF(success, format, a...)
 }
 
 func NoticeF(format string, a ...interface{}) {
-	notice.Printf(format, a...)
-	fmt.Println()
+	logF(notice, format, a...)
 }

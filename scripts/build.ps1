@@ -21,7 +21,7 @@ function Build-Windows {
 
   $env:GOOS = "windows"
   $env:GOARCH = "amd64"
-  go build -o "$appName.exe" ./app/cli
+  go build -o "$appName.exe" -ldflags "-X 'main.Release=prod'" ./app/cli
   
   if ($LASTEXITCODE -eq 0) {
     Write-Host "Build successful: $appName.exe" -ForegroundColor Green
@@ -35,7 +35,7 @@ function Build-Unix {
   
   $env:GOOS = "linux"
   $env:GOARCH = "amd64"
-  go build -o "$appName" ./app/cli
+  go build -o "$appName" -ldflags "-X 'main.Release=prod'" ./app/cli
 
   if ($LASTEXITCODE -eq 0) {
     Write-Host "Build successful: $appName" -ForegroundColor Green

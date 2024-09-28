@@ -1,21 +1,27 @@
 package paint
 
+import "github.com/fatih/color"
+
+func log(logger *color.Color, a ...interface{}) {
+	logger.Println(a...)
+}
+
 func Info(a ...interface{}) {
-	info.Println(a...)
+	log(info, a...)
 }
 
 func Error(a ...interface{}) {
-	err.Println(a...)
+	log(err, a...)
 }
 
 func Warn(a ...interface{}) {
-	warn.Println(a...)
+	log(warn, a...)
 }
 
 func Success(a ...interface{}) {
-	success.Println(a...)
+	log(success, a...)
 }
 
 func Notice(a ...interface{}) {
-	notice.Println(a...)
+	log(notice, a...)
 }
