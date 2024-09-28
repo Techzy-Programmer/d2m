@@ -1,4 +1,18 @@
-Write-Host "[WARN]: Static web-assets are not automatically built.`nPreviously built assets will be embeded!!" -ForegroundColor Yellow
+Write-Host "[>>]: Building for production..." -ForegroundColor Cyan
+Write-Host "[NPM]: Building `"web > panel`"..." -ForegroundColor Cyan
+
+Set-Location -Path (Join-Path $PWD "web\panel")
+& "pnpm" "run" "build"
+Write-Host ""
+
+if ($LASTEXITCODE -eq 0) { # Check if the pnpm build was successful
+  Write-Host "[NPM]: Web panel built successfully" -ForegroundColor Green
+} else {
+  Write-Host "[NPM]: build failed." -ForegroundColor Red
+}
+
+Set-Location -Path (Join-Path $PWD "..\..")
+
 $platform = Read-Host "Build for Windows or Unix? (Enter 'w' or 'u')" # Ask user for the target platform
 $appName = "d2m"
 

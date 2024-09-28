@@ -15,9 +15,14 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+var isDebug = false
 // ToDo: Implement SQLite based storage config and other data structures
 
 func main() {
+	if isDebug {
+		startDebug()
+	}
+
 	daemonFlag := flag.Bool("daemon", false, "Run as daemon")
 	flag.Parse()
 

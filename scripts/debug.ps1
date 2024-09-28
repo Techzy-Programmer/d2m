@@ -1,18 +1,5 @@
 Write-Host "[NOTE]: Running in DEBUG mode not suitable for production" -ForegroundColor DarkYellow
-
-Write-Host "[NPM]: Building `"web > panel`"..." -ForegroundColor Cyan
-
-Set-Location -Path (Join-Path $PWD "web\panel")
-& "pnpm" "run" "build"
-Write-Host ""
-
-if ($LASTEXITCODE -eq 0) { # Check if the pnpm build was successful
-  Write-Host "[NPM]: Web panel built successfully" -ForegroundColor Green
-} else {
-  Write-Host "[NPM]: build failed." -ForegroundColor Red
-}
-
-Set-Location -Path (Join-Path $PWD "..\..")
+Write-Host "[WARN]: Web assets are not built automagically!!" -ForegroundColor Yellow
 
 # ENV for Go build (Windows)
 $env:GOOS = "windows"

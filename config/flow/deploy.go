@@ -11,8 +11,9 @@ import (
 	"github.com/Techzy-Programmer/d2m/config"
 	"github.com/Techzy-Programmer/d2m/config/paint"
 	"github.com/Techzy-Programmer/d2m/config/univ"
-	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing/transport"
+	"github.com/go-git/go-git/v5/plumbing/transport/http"
 )
 
 // ToDo: Implememt comprehensive logging for deployment with timestamps and unique identifier
@@ -59,6 +60,14 @@ func ensureGHRepo(repoPth string, parentPath string, retry int) error {
 	appName := repoParts[1]
 	appPth := path.Join(parentPath, appName)
 	authTok := config.GetData[string]("user.GHPAT");
+	var authOpt transport.AuthMethod = nil;
+
+	if authTok != "" {
+		authOpt = &http.BasicAuth{
+			Username: repoParts[0],
+			Password: authTok,
+		}
+	}
 
 	if _, err := os.Stat(appPth); !os.IsNotExist(err) {
 		paint.Info("Repository already exists: ", appName)
@@ -73,10 +82,7 @@ func ensureGHRepo(repoPth string, parentPath string, retry int) error {
 			return err
 		} else {
 			pullErr := wt.Pull(&git.PullOptions{
-				Auth: &http.BasicAuth{
-					Username: repoParts[0],
-					Password: authTok,
-				},
+				Auth: authOpt,
 			})
 
 			if pullErr != nil {
@@ -90,11 +96,8 @@ func ensureGHRepo(repoPth string, parentPath string, retry int) error {
 	// Clone the repository
 	paint.Info("Cloning repository: ", appName)
 	_, cloneErr := git.PlainClone(appPth, false, &git.CloneOptions{
-		URL: repoPth,
-		Auth: &http.BasicAuth{
-			Username: repoParts[0],
-			Password: authTok,
-		},
+		URL: "https://github.com/" + repoPth,
+		Auth: authOpt,
 	})
 
 	if cloneErr != nil {
