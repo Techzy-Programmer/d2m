@@ -96,7 +96,7 @@ func ensureGHRepo(repoPth string, parentPath string, retry int) error {
 	// Clone the repository
 	paint.Info("Cloning repository: ", appName)
 	_, cloneErr := git.PlainClone(appPth, false, &git.CloneOptions{
-		URL: "https://github.com/" + repoPth,
+		URL:  "https://github.com/" + repoPth,
 		Auth: authOpt,
 	})
 
@@ -104,7 +104,7 @@ func ensureGHRepo(repoPth string, parentPath string, retry int) error {
 		if retry > 0 {
 			paint.Error("Error cloning repository: ", cloneErr)
 			paint.Info("Retrying...")
-			return ensureGHRepo(repoPth, parentPath, retry - 1)
+			return ensureGHRepo(repoPth, parentPath, retry-1)
 		}
 
 		return cloneErr

@@ -30,7 +30,7 @@ func init() {
 	if univ.IsProd {
 		gin.SetMode(gin.ReleaseMode)
 	}
-	
+
 	dc.apiPort = db.GetConfig("user.APIPort", "8080")
 	dc.uiPort = db.GetConfig("user.UIPort", "8000")
 }
@@ -61,7 +61,7 @@ func startDaemonTCPServer() {
 
 	defer listener.Close()
 	addrSegs := strings.Split(listener.Addr().String(), ":")
-	asgPort := addrSegs[len(addrSegs) - 1]
+	asgPort := addrSegs[len(addrSegs)-1]
 	paint.Info("Daemon server started at :" + asgPort)
 	db.SetConfig("daemon.PID", os.Getpid())
 	db.SetConfig("daemon.Port", asgPort)

@@ -101,7 +101,7 @@ func connectToDaemon() bool {
 		return false
 	}
 
-	conn, err := net.Dial("tcp", ":" + port)
+	conn, err := net.Dial("tcp", ":"+port)
 	if err != nil {
 		return false
 	}

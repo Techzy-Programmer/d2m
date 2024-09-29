@@ -5,9 +5,9 @@ import (
 )
 
 var (
-	info = color.New(color.FgHiCyan)
-	err = color.New(color.FgHiRed)
-	warn = color.New(color.FgHiYellow)
+	info    = color.New(color.FgHiCyan)
+	err     = color.New(color.FgHiRed)
+	warn    = color.New(color.FgHiYellow)
 	success = color.New(color.FgHiGreen)
-	notice = color.New(color.FgHiWhite).Add(color.Faint)
+	notice  = color.New(color.FgHiWhite).Add(color.Faint)
 )

@@ -16,7 +16,7 @@ var dbi *gorm.DB // Database instance
 var migTables = []interface{}{&Config[any]{}}
 
 func init() {
-	configPath, err := univ.GetUserConfigPath("d2m");
+	configPath, err := univ.GetUserConfigPath("d2m")
 	if err != nil {
 		log.Fatalf("Failed to get config path: %v", err)
 	}
@@ -27,7 +27,7 @@ func init() {
 		}
 	}
 
-	var dbErr error;
+	var dbErr error
 	dbFile := filepath.Join(configPath, "d2m.db")
 	dbi, dbErr = gorm.Open(sqlite.Open(dbFile), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Silent),
@@ -40,8 +40,8 @@ func init() {
 }
 
 type Config[T any] struct {
-	Key   string `gorm:"primaryKey"`
-	Value T      `gorm:"-"` // Ignore this field for GORM's migrations; will handle manually
+	Key      string `gorm:"primaryKey"`
+	Value    T      `gorm:"-"`            // Ignore this field for GORM's migrations; will handle manually
 	RawValue []byte `gorm:"column:value"` // Store the JSON-encoded value as a byte slice
 }
 

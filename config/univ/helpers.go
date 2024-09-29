@@ -46,12 +46,12 @@ func GetUserConfigPath(appName string) (string, error) {
 }
 
 func ScheduleGHActionIPFetch() {
-	tries := 0;
+	tries := 0
 
 	for {
 		ips, err := getActionsIP()
 		if err != nil {
-			time.Sleep(time.Duration(tries + 1) * 10 * time.Second) // Linear backoff
+			time.Sleep(time.Duration(tries+1) * 10 * time.Second) // Linear backoff
 
 			if tries < 3 {
 				tries++

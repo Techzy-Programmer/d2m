@@ -52,7 +52,7 @@ func HandleDeployment(c *gin.Context) {
 		paint.Error("Error getting private key: ", keyErr)
 		c.JSON(500, gin.H{
 			"message": "Internal server error",
-			"code":		 "private_key_error",
+			"code":    "private_key_error",
 			"ok":      false,
 		})
 		return
@@ -63,7 +63,7 @@ func HandleDeployment(c *gin.Context) {
 		paint.Error("Error decrypting request body: ", decryptErr)
 		c.JSON(500, gin.H{
 			"message": "Internal server error",
-			"code":		 "decryption_error",
+			"code":    "decryption_error",
 			"ok":      false,
 		})
 		return
