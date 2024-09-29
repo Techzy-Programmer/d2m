@@ -9,7 +9,7 @@ import (
 	"errors"
 	"slices"
 
-	"github.com/Techzy-Programmer/d2m/config"
+	"github.com/Techzy-Programmer/d2m/config/db"
 	"github.com/Techzy-Programmer/d2m/config/flow"
 	"github.com/Techzy-Programmer/d2m/config/paint"
 	"github.com/Techzy-Programmer/d2m/config/univ"
@@ -91,7 +91,7 @@ func HandleDeployment(c *gin.Context) {
 
 func getPrivateKey() (*rsa.PrivateKey, error) {
 	// Decode the PEM block
-	block, _ := pem.Decode([]byte(config.GetData[string]("user.PrivateKey")))
+	block, _ := pem.Decode([]byte(db.GetConfig[string]("user.PrivateKey")))
 	if block == nil || block.Type != "PRIVATE KEY" {
 		return nil, errors.New("failed to decode PEM block containing private key")
 	}

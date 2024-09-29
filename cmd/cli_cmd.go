@@ -7,19 +7,19 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Techzy-Programmer/d2m/config"
+	"github.com/Techzy-Programmer/d2m/config/db"
 	"github.com/Techzy-Programmer/d2m/config/paint"
 	"github.com/erikgeiser/promptkit/textinput"
 	"github.com/urfave/cli/v2"
 )
 
 func HandleInitCMD(*cli.Context) error {
-	hasConfig := config.GetData[bool]("user.HasConfig")
+	hasConfig := db.GetConfig[bool]("user.HasConfig")
 
 	if !hasConfig {
 		requestConfig()
 	} else {
-		askForService()
+		getHelp()
 	}
 
 	return nil
@@ -32,31 +32,31 @@ func requestConfig() {
 		if input == "" {
 			return errors.New("port number is required")
 		}
-	
+
 		port, err := strconv.Atoi(input)
 		if err != nil {
 			return errors.New("port number must be a valid integer")
 		}
-	
+
 		if port < 80 || port > 65535 {
 			return errors.New("invalid port number range")
 		}
-	
+
 		return nil
 	}
 
-	uiPortIn := textinput.New("Enter port for web panel: ")
+	uiPortIn := textinput.New("Configure a port for web panel: ")
 	uiPortIn.Validate = portValidator
 	uiPortIn.InitialValue = "8000"
 	uiPortIn.Placeholder = "8000"
-	
+
 	uiPort, err := uiPortIn.RunPrompt()
 	if err != nil {
 		paint.Error("Error: ", err)
-		return;
+		return
 	}
 
-	apiPortIn := textinput.New("Enter port for webhook API: ")
+	apiPortIn := textinput.New("Configure a port for API: ")
 	apiPortIn.Validate = portValidator
 	apiPortIn.InitialValue = "8080"
 	apiPortIn.Placeholder = "8080"
@@ -64,7 +64,7 @@ func requestConfig() {
 	apiPort, err := apiPortIn.RunPrompt()
 	if err != nil {
 		paint.Error("Error: ", err)
-		return;
+		return
 	}
 
 	ghUsernameIn := textinput.New("Enter your GitHub Username: ")
@@ -73,7 +73,7 @@ func requestConfig() {
 	ghUsername, err := ghUsernameIn.RunPrompt()
 	if err != nil {
 		paint.Error("Error: ", err)
-		return;
+		return
 	}
 
 	paint.Notice("\nTo clone private repositories, D2M requires a GitHub Personal Access Token (PAT).")
@@ -88,11 +88,11 @@ func requestConfig() {
 		}
 
 		pattern := `^(gh[ps]_[a-zA-Z0-9]{36}|github_pat_[a-zA-Z0-9]{22}_[a-zA-Z0-9]{59})$`
-    
-    regex, err := regexp.Compile(pattern)
-    if err != nil {
+
+		regex, err := regexp.Compile(pattern)
+		if err != nil {
 			return err
-    }
+		}
 
 		if !regex.MatchString(input) {
 			return errors.New("invalid GitHub PAT")
@@ -104,9 +104,9 @@ func requestConfig() {
 	ghPAT, err := ghPATIn.RunPrompt()
 	if err != nil {
 		paint.Error("Error: ", err)
-		return;
+		return
 	}
-	
+
 	paint.Notice("\nD2M requires private key corresponding to public key of your GH-Actions runner to decrypt the webhook payload")
 	privDecryptKeyIn := textinput.New("Enter the path to your private key: ")
 	privDecryptKeyIn.Placeholder = "path/to/private-key.pem"
@@ -135,13 +135,14 @@ func requestConfig() {
 		return
 	}
 
-	config.SetData("user.HasConfig", true)
-	config.SetData("user.UIPort", uiPort)
-	config.SetData("user.APIPort", apiPort)
-	config.SetData("user.GHUsername", ghUsername)
-	config.SetData("user.GHPAT", ghPAT)
-	config.SetData("user.PrivateKey", string(privKey))
+	db.SetConfig("user.HasConfig", true)
+	db.SetConfig("user.UIPort", uiPort)
+	db.SetConfig("user.APIPort", apiPort)
+	db.SetConfig("user.GHUsername", ghUsername)
+	db.SetConfig("user.GHPAT", ghPAT)
+	db.SetConfig("user.PrivateKey", string(privKey))
 }
 
-func askForService() {
+func getHelp() {
+	paint.Info("D2M is configured and running. Please execute 'd2m h' to see available commands.")
 }

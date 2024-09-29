@@ -11,21 +11,21 @@ import (
 
 	"github.com/Techzy-Programmer/d2m/app/daemon"
 	"github.com/Techzy-Programmer/d2m/cmd"
-	"github.com/Techzy-Programmer/d2m/config"
+	"github.com/Techzy-Programmer/d2m/config/db"
 	"github.com/Techzy-Programmer/d2m/config/univ"
 	"github.com/Techzy-Programmer/d2m/internal/ipc"
-	"github.com/gin-gonic/gin"
 	"github.com/urfave/cli/v2"
 )
 
 var Release string
-// ToDo: Implement SQLite based storage config and other data structures
+
+func init() {
+	univ.IsProd = (Release == "prod")
+}
 
 func main() {
-	if Release != "prod" && Release != "" {
+	if !univ.IsProd {
 		startDebug()
-	} else {
-		gin.SetMode(gin.ReleaseMode)
 	}
 
 	daemonFlag := flag.Bool("daemon", false, "Run as daemon")
@@ -37,7 +37,7 @@ func main() {
 	}
 
 	// Ensure daemon is running before handling CLI commands
-	pid := config.GetData[float64]("daemon.PID")
+	pid := db.GetConfig[float64]("daemon.PID")
 
 	if !isProcessRunning(pid) {
 		ensureDaemonRunning()
@@ -48,8 +48,8 @@ func main() {
 	}
 
 	app := &cli.App{
-		Name:  "d2m",
-		Usage: "Managr your deployments with ease",
+		Name:   "d2m",
+		Usage:  "Managr your deployments with ease",
 		Action: cmd.HandleInitCMD,
 	}
 
@@ -57,7 +57,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	time.Sleep(60 * time.Second)
+	time.Sleep(1 * time.Second)
 }
 
 func isProcessRunning(pid float64) bool {
@@ -76,7 +76,7 @@ func isProcessRunning(pid float64) bool {
 		return checkTCPAlive()
 	}
 
-	return false 
+	return false
 }
 
 // Function to check if it's really our own daemon service that's running with the given PID
@@ -96,7 +96,7 @@ func checkTCPAlive() bool {
 }
 
 func connectToDaemon() bool {
-	port := config.GetData[string]("daemon.Port")
+	port := db.GetConfig[string]("daemon.Port")
 	if port == "" {
 		return false
 	}

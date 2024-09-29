@@ -8,7 +8,7 @@ import (
 	"path"
 	"strings"
 
-	"github.com/Techzy-Programmer/d2m/config"
+	"github.com/Techzy-Programmer/d2m/config/db"
 	"github.com/Techzy-Programmer/d2m/config/paint"
 	"github.com/Techzy-Programmer/d2m/config/univ"
 	"github.com/go-git/go-git/v5"
@@ -24,7 +24,7 @@ func StartDeployment(req *univ.DeploymentRequest) {
 		paint.Error("Error getting user home directory: ", hdirErr)
 		return
 	}
-	
+
 	// Ensure the parent path exists
 	parentPath := path.Join(homeDir, req.LocalParentPath)
 	if info, err := os.Stat(parentPath); os.IsNotExist(err) || !info.IsDir() {
@@ -46,7 +46,7 @@ func StartDeployment(req *univ.DeploymentRequest) {
 	}
 
 	// ToDo: Implement AutoSetupDeps with smart inference
-	
+
 	// Run the deployment commands
 	depExErr := execCmds(req.PostDeployCmds, parentPath, req.FailOnCmdError)
 	if depExErr != nil {
@@ -59,8 +59,8 @@ func ensureGHRepo(repoPth string, parentPath string, retry int) error {
 	repoParts := strings.Split(repoPth, "/")
 	appName := repoParts[1]
 	appPth := path.Join(parentPath, appName)
-	authTok := config.GetData[string]("user.GHPAT");
-	var authOpt transport.AuthMethod = nil;
+	authTok := db.GetConfig[string]("user.GHPAT")
+	var authOpt transport.AuthMethod = nil
 
 	if authTok != "" {
 		authOpt = &http.BasicAuth{
@@ -109,7 +109,7 @@ func ensureGHRepo(repoPth string, parentPath string, retry int) error {
 
 		return cloneErr
 	}
-	
+
 	return nil
 }
 
@@ -117,10 +117,10 @@ func execCmds(cmds []string, wdPath string, stopOnErr bool) error {
 	for _, cmd := range cmds {
 		cmdParts := strings.Split(cmd, " ")
 		ex := exec.Command(cmdParts[0], cmdParts[1:]...)
-		ex.Dir = wdPath;
+		ex.Dir = wdPath
 
 		if runErr := ex.Run(); runErr != nil {
-			if (stopOnErr) {
+			if stopOnErr {
 				return runErr
 			}
 

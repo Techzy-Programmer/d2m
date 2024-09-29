@@ -7,6 +7,7 @@ const (
 )
 
 var (
+	IsProd           = false
 	AliveChannel     = make(chan bool)
 	GHActionIps      = []string{}
 	CLIConn net.Conn

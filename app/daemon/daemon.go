@@ -9,13 +9,14 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/Techzy-Programmer/d2m/config"
+	"github.com/Techzy-Programmer/d2m/config/db"
 	"github.com/Techzy-Programmer/d2m/config/msg"
 	"github.com/Techzy-Programmer/d2m/config/paint"
 	"github.com/Techzy-Programmer/d2m/config/univ"
 	"github.com/Techzy-Programmer/d2m/internal/api"
 	"github.com/Techzy-Programmer/d2m/internal/ipc"
 	"github.com/Techzy-Programmer/d2m/internal/ui"
+	"github.com/gin-gonic/gin"
 )
 
 type daemonConfig struct {
@@ -26,8 +27,12 @@ type daemonConfig struct {
 var dc daemonConfig
 
 func init() {
-	dc.apiPort = config.GetData("user.APIPort", "8080")
-	dc.uiPort = config.GetData("user.UIPort", "8000")
+	if univ.IsProd {
+		gin.SetMode(gin.ReleaseMode)
+	}
+	
+	dc.apiPort = db.GetConfig("user.APIPort", "8080")
+	dc.uiPort = db.GetConfig("user.UIPort", "8000")
 }
 
 func LaunchDaemon() {
@@ -42,8 +47,8 @@ func LaunchDaemon() {
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 
 	<-sigChan // Wait for a signal
-	config.SetData("daemon.PID", -1)
-	config.SetData("daemon.Port", "")
+	db.DeleteConfig("daemon.PID")
+	db.DeleteConfig("daemon.Port")
 }
 
 func startDaemonTCPServer() {
@@ -58,8 +63,8 @@ func startDaemonTCPServer() {
 	addrSegs := strings.Split(listener.Addr().String(), ":")
 	asgPort := addrSegs[len(addrSegs) - 1]
 	paint.Info("Daemon server started at :" + asgPort)
-	config.SetData("daemon.PID", os.Getpid())
-	config.SetData("daemon.Port", asgPort)
+	db.SetConfig("daemon.PID", os.Getpid())
+	db.SetConfig("daemon.Port", asgPort)
 
 	for {
 		conn, err := listener.Accept()
