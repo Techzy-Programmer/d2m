@@ -13,34 +13,32 @@ import (
 	"github.com/Techzy-Programmer/d2m/config/msg"
 	"github.com/Techzy-Programmer/d2m/config/paint"
 	"github.com/Techzy-Programmer/d2m/config/univ"
-	"github.com/Techzy-Programmer/d2m/internal/api"
 	"github.com/Techzy-Programmer/d2m/internal/ipc"
-	"github.com/Techzy-Programmer/d2m/internal/ui"
+	"github.com/Techzy-Programmer/d2m/internal/server"
 	"github.com/gin-gonic/gin"
 )
 
 type daemonConfig struct {
-	apiPort string
-	uiPort  string
+	webPort string
 }
 
 var dc daemonConfig
 
-func init() {
+// Synthetic init function
+func synInit() {
 	if univ.IsProd {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
-	dc.apiPort = db.GetConfig("user.APIPort", "8080")
-	dc.uiPort = db.GetConfig("user.UIPort", "8000")
+	dc.webPort = db.GetConfig("user.WebPort", "8080")
 }
 
 func LaunchDaemon() {
+	synInit()
 	fmt.Println("Spinning up the daemon process...")
 
 	go univ.ScheduleGHActionIPFetch()
-	go api.StartAPIServer(dc.apiPort)
-	go ui.StartUIServer(dc.uiPort)
+	go server.StartWebServer(dc.webPort)
 	go startDaemonTCPServer()
 
 	sigChan := make(chan os.Signal, 1)

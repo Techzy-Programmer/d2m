@@ -45,23 +45,15 @@ func requestConfig() {
 		return nil
 	}
 
-	uiPortIn := textinput.New("Configure a port for web panel: ")
-	uiPortIn.Validate = portValidator
-	uiPortIn.InitialValue = "8000"
-	uiPortIn.Placeholder = "8000"
+	paint.Notice("\nPlease make sure the port you provide is not in use by any other service.")
+	paint.Notice("D2M will use this port to serve the Panel UI and webhooks API.")
+	paint.Notice("Make sure the port is accessible from the public internet.")
+	webPortIn := textinput.New("Configure a port for Web Server: ")
+	webPortIn.Validate = portValidator
+	webPortIn.InitialValue = "8080"
+	webPortIn.Placeholder = "8080"
 
-	uiPort, err := uiPortIn.RunPrompt()
-	if err != nil {
-		paint.Error("Error: ", err)
-		return
-	}
-
-	apiPortIn := textinput.New("Configure a port for API: ")
-	apiPortIn.Validate = portValidator
-	apiPortIn.InitialValue = "8080"
-	apiPortIn.Placeholder = "8080"
-
-	apiPort, err := apiPortIn.RunPrompt()
+	webPort, err := webPortIn.RunPrompt()
 	if err != nil {
 		paint.Error("Error: ", err)
 		return
@@ -136,8 +128,7 @@ func requestConfig() {
 	}
 
 	db.SetConfig("user.HasConfig", true)
-	db.SetConfig("user.UIPort", uiPort)
-	db.SetConfig("user.APIPort", apiPort)
+	db.SetConfig("user.WebPort", webPort)
 	db.SetConfig("user.GHUsername", ghUsername)
 	db.SetConfig("user.GHPAT", ghPAT)
 	db.SetConfig("user.PrivateKey", string(privKey))

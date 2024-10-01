@@ -1,8 +1,8 @@
-package api
+package handler
 
 import "github.com/gin-gonic/gin"
 
-func HandlePanel(c *gin.Context) {
+func HandleAPI(c *gin.Context) {
 	// Handle panel requests
 
 	c.JSON(501, gin.H{
