@@ -11,6 +11,7 @@ import (
 	"github.com/Techzy-Programmer/d2m/config/paint"
 	"github.com/erikgeiser/promptkit/textinput"
 	"github.com/urfave/cli/v2"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func HandleInitCMD(*cli.Context) error {
@@ -27,6 +28,28 @@ func HandleInitCMD(*cli.Context) error {
 
 func requestConfig() {
 	paint.Info("D2M is not configured yet.\nPlease provide the following details to setup D2M.\n")
+
+	pwdRegex := `^(?!.*(.)\1\1)(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?]).{10,}$`
+	gitRegex := `^(gh[ps]_[a-zA-Z0-9]{36}|github_pat_[a-zA-Z0-9]{22}_[a-zA-Z0-9]{59})$`
+
+	createRegexValidator := func(pattern string, emsg string) func(input string) error {
+		return func(input string) error {
+			if input == "" {
+				return nil
+			}
+
+			regex, err := regexp.Compile(pattern)
+			if err != nil {
+				return err
+			}
+
+			if !regex.MatchString(input) {
+				return errors.New(emsg)
+			}
+
+			return nil
+		}
+	}
 
 	portValidator := func(input string) error {
 		if input == "" {
@@ -59,10 +82,13 @@ func requestConfig() {
 		return
 	}
 
-	ghUsernameIn := textinput.New("Enter your GitHub Username: ")
-	ghUsernameIn.Placeholder = "github-username"
+	paint.Notice("\nYou'll be required to enter this access password at time of web panel login.")
+	paint.Notice("You also have to set it up in your GitHub Actions runner.")
+	accessPwdIn := textinput.New("Set a new Access Password: ")
+	accessPwdIn.Validate = createRegexValidator(pwdRegex, "")
+	accessPwdIn.Placeholder = "$0mEThiNg$TR0ng&S3cU#e"
 
-	ghUsername, err := ghUsernameIn.RunPrompt()
+	accessPwd, err := accessPwdIn.RunPrompt()
 	if err != nil {
 		paint.Error("Error: ", err)
 		return
@@ -71,32 +97,29 @@ func requestConfig() {
 	paint.Notice("\nTo clone private repositories, D2M requires a GitHub Personal Access Token (PAT).")
 	paint.Notice("Leave this field empty if you don't want to include private repos in your pipeline.")
 	ghPATIn := textinput.New("Enter GitHub Personal Access Token (with repo clone permission): ")
+	ghPATIn.Validate = createRegexValidator(gitRegex, "Invalid GitHub PAT")
 	ghPATIn.Placeholder = "ghp_XXXXXXXXXXXXXX"
 	ghPATIn.Hidden = true
-
-	ghPATIn.Validate = func(input string) error {
-		if input == "" {
-			return nil
-		}
-
-		pattern := `^(gh[ps]_[a-zA-Z0-9]{36}|github_pat_[a-zA-Z0-9]{22}_[a-zA-Z0-9]{59})$`
-
-		regex, err := regexp.Compile(pattern)
-		if err != nil {
-			return err
-		}
-
-		if !regex.MatchString(input) {
-			return errors.New("invalid GitHub PAT")
-		}
-
-		return nil
-	}
 
 	ghPAT, err := ghPATIn.RunPrompt()
 	if err != nil {
 		paint.Error("Error: ", err)
 		return
+	}
+
+	var ghUsername string
+
+	if ghPAT != "" {
+		paint.Notice("\nGitHub username is required to fetch repositories with PAT.")
+		ghUsernameIn := textinput.New("Enter your GitHub Username: ")
+		ghUsernameIn.Placeholder = "github-username"
+		var ghErr error
+
+		ghUsername, ghErr = ghUsernameIn.RunPrompt()
+		if ghErr != nil {
+			paint.Error("Error: ", err)
+			return
+		}
 	}
 
 	paint.Notice("\nD2M requires private key corresponding to public key of your GH-Actions runner to decrypt the webhook payload")
@@ -127,11 +150,18 @@ func requestConfig() {
 		return
 	}
 
+	cryptPwdBytes, cryptErr := bcrypt.GenerateFromPassword([]byte(accessPwd), bcrypt.DefaultCost)
+	if cryptErr != nil {
+		paint.Error("Error: ", cryptErr)
+		return
+	}
+
+	db.SetConfig("user.GHPAT", ghPAT)
 	db.SetConfig("user.HasConfig", true)
 	db.SetConfig("user.WebPort", webPort)
 	db.SetConfig("user.GHUsername", ghUsername)
-	db.SetConfig("user.GHPAT", ghPAT)
 	db.SetConfig("user.PrivateKey", string(privKey))
+	db.SetConfig("user.AccessPwd", string(cryptPwdBytes))
 }
 
 func getHelp() {

@@ -1,6 +1,9 @@
 package univ
 
-import "net"
+import (
+	"crypto/rsa"
+	"net"
+)
 
 const (
 	Version = "0.1.0"
@@ -11,4 +14,5 @@ var (
 	AliveChannel = make(chan bool)
 	GHActionIps  = []string{}
 	CLIConn      net.Conn
+	PrivKey      *rsa.PrivateKey
 )

@@ -2,14 +2,10 @@ package handler
 
 import (
 	"crypto/rsa"
-	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
-	"encoding/pem"
-	"errors"
 	"slices"
 
-	"github.com/Techzy-Programmer/d2m/config/db"
 	"github.com/Techzy-Programmer/d2m/config/flow"
 	"github.com/Techzy-Programmer/d2m/config/paint"
 	"github.com/Techzy-Programmer/d2m/config/univ"
@@ -47,9 +43,8 @@ func HandleDeployment(c *gin.Context) {
 		return
 	}
 
-	privateKey, keyErr := getPrivateKey()
-	if keyErr != nil {
-		paint.Error("Error getting private key: ", keyErr)
+	if univ.PrivKey == nil {
+		paint.Error("Private key not yet configured")
 		c.JSON(500, gin.H{
 			"message": "Internal server error",
 			"code":    "private_key_error",
@@ -58,7 +53,7 @@ func HandleDeployment(c *gin.Context) {
 		return
 	}
 
-	decBodyBits, decryptErr := rsa.DecryptPKCS1v15(nil, privateKey, encBodyBits)
+	decBodyBits, decryptErr := rsa.DecryptPKCS1v15(nil, univ.PrivKey, encBodyBits)
 	if decryptErr != nil {
 		paint.Error("Error decrypting request body: ", decryptErr)
 		c.JSON(500, gin.H{
@@ -87,26 +82,4 @@ func HandleDeployment(c *gin.Context) {
 		"message": "Deployment triggered successfully",
 		"ok":      true,
 	})
-}
-
-func getPrivateKey() (*rsa.PrivateKey, error) {
-	// Decode the PEM block
-	block, _ := pem.Decode([]byte(db.GetConfig[string]("user.PrivateKey")))
-	if block == nil || block.Type != "PRIVATE KEY" {
-		return nil, errors.New("failed to decode PEM block containing private key")
-	}
-
-	// Parse the private key
-	privateKey, err := x509.ParsePKCS8PrivateKey(block.Bytes)
-	if err != nil {
-		return nil, errors.New("error parsing private key: " + (err.Error()))
-	}
-
-	// Type assertion to convert to *rsa.PrivateKey
-	rsaPrivateKey, ok := privateKey.(*rsa.PrivateKey)
-	if !ok {
-		return nil, errors.New("not an RSA private key")
-	}
-
-	return rsaPrivateKey, nil
 }

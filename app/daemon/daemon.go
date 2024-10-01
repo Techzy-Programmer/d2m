@@ -30,6 +30,11 @@ func synInit() {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
+	keyStr := db.GetConfig("user.PrivateKey", "")
+	if keyStr != "" {
+		univ.PrivKey, _ = univ.GetPrivateKey(keyStr)
+	}
+
 	dc.webPort = db.GetConfig("user.WebPort", "8080")
 }
 
