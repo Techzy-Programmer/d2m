@@ -2,6 +2,8 @@ package helpers
 
 import (
 	"errors"
+	"io"
+	"net/http"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -68,4 +70,13 @@ func ScheduleGHActionIPFetch() {
 
 type GitHubMeta struct {
 	Actions []string `json:"actions"`
+}
+
+func BodyAsText(req *http.Request) string {
+	body, err := io.ReadAll(req.Body)
+	if err != nil {
+		return ""
+	}
+
+	return string(body)
 }

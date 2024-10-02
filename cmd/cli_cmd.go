@@ -6,8 +6,10 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"unicode"
 
 	"github.com/Techzy-Programmer/d2m/config/db"
+	"github.com/Techzy-Programmer/d2m/config/helpers"
 	"github.com/Techzy-Programmer/d2m/config/paint"
 	"github.com/erikgeiser/promptkit/textinput"
 	"github.com/urfave/cli/v2"
@@ -27,17 +29,11 @@ func HandleInitCMD(*cli.Context) error {
 }
 
 func requestConfig() {
-	paint.Info("D2M is not configured yet.\nPlease provide the following details to setup D2M.\n")
-
-	pwdRegex := `^(?!.*(.)\1\1)(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?]).{10,}$`
-	gitRegex := `^(gh[ps]_[a-zA-Z0-9]{36}|github_pat_[a-zA-Z0-9]{22}_[a-zA-Z0-9]{59})$`
+	paint.Info("D2M is not configured yet.\nPlease provide the following details to setup D2M.")
+	gitRegex := `^(gh[ps]_[a-zA-Z0-9]{36}|github_pat_[a-zA-Z0-9]{22}_[a-zA-Z0-9]{59}|)$`
 
 	createRegexValidator := func(pattern string, emsg string) func(input string) error {
 		return func(input string) error {
-			if input == "" {
-				return nil
-			}
-
 			regex, err := regexp.Compile(pattern)
 			if err != nil {
 				return err
@@ -85,8 +81,16 @@ func requestConfig() {
 	paint.Notice("\nYou'll be required to enter this access password at time of web panel login.")
 	paint.Notice("You also have to set it up in your GitHub Actions runner.")
 	accessPwdIn := textinput.New("Set a new Access Password: ")
-	accessPwdIn.Validate = createRegexValidator(pwdRegex, "")
 	accessPwdIn.Placeholder = "$0mEThiNg$TR0ng&S3cU#e"
+	accessPwdIn.Hidden = true
+
+	accessPwdIn.Validate = func(input string) error {
+		if !isValidPassword(input) {
+			return errors.New("password is too weak")
+		}
+
+		return nil
+	}
 
 	accessPwd, err := accessPwdIn.RunPrompt()
 	if err != nil {
@@ -135,6 +139,17 @@ func requestConfig() {
 			return errors.New("private key file not found")
 		}
 
+		privKey, err := os.ReadFile(input)
+		if err != nil {
+			paint.Error("Error: ", err)
+			return err
+		}
+
+		_, err = helpers.GetPrivateKey(string(privKey))
+		if err != nil {
+			return errors.New("invalid private key")
+		}
+
 		return nil
 	}
 
@@ -166,4 +181,46 @@ func requestConfig() {
 
 func getHelp() {
 	paint.Info("D2M is configured and running. Please execute 'd2m h' to see available commands.")
+}
+
+func isValidPassword(password string) bool {
+	if len(password) < 10 {
+		return false
+	}
+
+	var (
+		hasLower   = false
+		hasUpper   = false
+		hasDigit   = false
+		hasSpecial = false
+	)
+
+	specialChars := "!@#$%^&*()_+-=[]{};\\':\"|,./<>?"
+	var lastChar rune
+	var repeatCount int
+
+	for _, char := range password {
+		switch {
+		case unicode.IsLower(char):
+			hasLower = true
+		case unicode.IsUpper(char):
+			hasUpper = true
+		case unicode.IsDigit(char):
+			hasDigit = true
+		case strings.ContainsRune(specialChars, char):
+			hasSpecial = true
+		}
+
+		if char == lastChar {
+			repeatCount++
+			if repeatCount == 3 {
+				return false
+			}
+		} else {
+			repeatCount = 1
+		}
+		lastChar = char
+	}
+
+	return hasLower && hasUpper && hasDigit && hasSpecial
 }

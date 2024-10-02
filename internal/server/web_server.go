@@ -22,7 +22,7 @@ func StartWebServer(port string) {
 	api := router.Group("/api")
 	{
 		api.POST("/deploy", handler.HandleDeployment)
-		api.POST("/", handler.HandleAPI)
+		api.POST("/auth", handler.HandleAuth)
 	}
 
 	paint.Info("Serving backend at :" + port)
