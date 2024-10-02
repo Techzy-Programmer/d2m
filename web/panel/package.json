@@ -15,6 +15,7 @@
     "@mantine/hooks": "7.13.0",
     "@mantine/modals": "7.13.0",
     "@mantine/notifications": "7.13.0",
+    "jsencrypt": "^3.3.2",
     "lucide-react": "^0.446.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -36,5 +37,6 @@
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.0.1",
     "vite": "^5.4.1"
-  }
+  },
+  "packageManager": "pnpm@9.9.0"
 }
