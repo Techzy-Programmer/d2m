@@ -8,7 +8,7 @@ import (
 
 	"github.com/Techzy-Programmer/d2m/config/msg"
 	"github.com/Techzy-Programmer/d2m/config/paint"
-	"github.com/Techzy-Programmer/d2m/config/univ"
+	"github.com/Techzy-Programmer/d2m/config/vars"
 )
 
 func HandleConnection(conn net.Conn) {
@@ -33,8 +33,8 @@ func processMsg(message msg.MSG, conn net.Conn) {
 	case *msg.PingMSG:
 		if m.IsWelcome {
 			// Notify CLI thread that daemon is alive
-			univ.AliveChannel <- true
-			close(univ.AliveChannel)
+			vars.AliveChannel <- true
+			close(vars.AliveChannel)
 			return
 		}
 

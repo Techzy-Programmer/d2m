@@ -10,9 +10,10 @@ import (
 	"syscall"
 
 	"github.com/Techzy-Programmer/d2m/config/db"
+	"github.com/Techzy-Programmer/d2m/config/helpers"
 	"github.com/Techzy-Programmer/d2m/config/msg"
 	"github.com/Techzy-Programmer/d2m/config/paint"
-	"github.com/Techzy-Programmer/d2m/config/univ"
+	"github.com/Techzy-Programmer/d2m/config/vars"
 	"github.com/Techzy-Programmer/d2m/internal/ipc"
 	"github.com/Techzy-Programmer/d2m/internal/server"
 	"github.com/gin-gonic/gin"
@@ -26,13 +27,13 @@ var dc daemonConfig
 
 // Synthetic init function
 func synInit() {
-	if univ.IsProd {
+	if vars.IsProd {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
 	keyStr := db.GetConfig("user.PrivateKey", "")
 	if keyStr != "" {
-		univ.PrivKey, _ = univ.GetPrivateKey(keyStr)
+		vars.PrivKey, _ = helpers.GetPrivateKey(keyStr)
 	}
 
 	dc.webPort = db.GetConfig("user.WebPort", "8080")
@@ -42,7 +43,7 @@ func LaunchDaemon() {
 	synInit()
 	fmt.Println("Spinning up the daemon process...")
 
-	go univ.ScheduleGHActionIPFetch()
+	go helpers.ScheduleGHActionIPFetch()
 	go server.StartWebServer(dc.webPort)
 	go startDaemonTCPServer()
 

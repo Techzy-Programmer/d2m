@@ -12,7 +12,7 @@ import (
 	"github.com/Techzy-Programmer/d2m/app/daemon"
 	"github.com/Techzy-Programmer/d2m/cmd"
 	"github.com/Techzy-Programmer/d2m/config/db"
-	"github.com/Techzy-Programmer/d2m/config/univ"
+	"github.com/Techzy-Programmer/d2m/config/vars"
 	"github.com/Techzy-Programmer/d2m/internal/ipc"
 	"github.com/urfave/cli/v2"
 )
@@ -20,11 +20,11 @@ import (
 var Release string
 
 func init() {
-	univ.IsProd = (Release == "prod")
+	vars.IsProd = (Release == "prod")
 }
 
 func main() {
-	if !univ.IsProd {
+	if !vars.IsProd {
 		startDebug()
 	}
 
@@ -86,11 +86,11 @@ func checkTCPAlive() bool {
 	}
 
 	select {
-	case <-univ.AliveChannel:
+	case <-vars.AliveChannel:
 		return true
 
 	case <-time.After(5 * time.Second):
-		univ.CLIConn.Close()
+		vars.CLIConn.Close()
 		return false
 	}
 }
@@ -107,6 +107,6 @@ func connectToDaemon() bool {
 	}
 
 	go ipc.HandleConnection(conn)
-	univ.CLIConn = conn
+	vars.CLIConn = conn
 	return true
 }

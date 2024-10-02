@@ -1,4 +1,6 @@
-package univ
+package types
+
+// [-] Note: Put up type definition here which are used across multiple packages
 
 type DeploymentRequest struct {
 	PostDeployCmds  []string `json:"post_deploy_cmds"`  // Commands to run after deployment (default: [])

@@ -4,14 +4,13 @@ import (
 	// "os"
 
 	// "github.com/Techzy-Programmer/d2m/config/flow"
-	// "github.com/Techzy-Programmer/d2m/config/univ"
 	"github.com/Techzy-Programmer/d2m/config/paint"
 )
 
 func startDebug() {
 	paint.Warn("Running in debug mode")
 
-	// flow.StartDeployment(&univ.DeploymentRequest{
+	// flow.StartDeployment(&types.DeploymentRequest{
 	// 	Branch: 				 "main",
 	// 	AutoSetupDeps:   true,
 	// 	LocalUser:       "risha",

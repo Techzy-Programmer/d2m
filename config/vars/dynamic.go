@@ -1,12 +1,8 @@
-package univ
+package vars
 
 import (
 	"crypto/rsa"
 	"net"
-)
-
-const (
-	Version = "0.1.0"
 )
 
 var (

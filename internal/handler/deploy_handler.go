@@ -8,14 +8,15 @@ import (
 
 	"github.com/Techzy-Programmer/d2m/config/flow"
 	"github.com/Techzy-Programmer/d2m/config/paint"
-	"github.com/Techzy-Programmer/d2m/config/univ"
+	"github.com/Techzy-Programmer/d2m/config/types"
+	"github.com/Techzy-Programmer/d2m/config/vars"
 	"github.com/gin-gonic/gin"
 )
 
 func HandleDeployment(c *gin.Context) {
 	// Following check ensures that request only gets through if coming from GitHub actions workflow
 	// ToDo: Support custom CD servers and/or workflow runners
-	if !slices.Contains(univ.GHActionIps, c.ClientIP()) {
+	if !slices.Contains(vars.GHActionIps, c.ClientIP()) {
 		c.JSON(403, gin.H{
 			"message": "You are not allowed to access this resource",
 			"ok":      false,
@@ -43,7 +44,7 @@ func HandleDeployment(c *gin.Context) {
 		return
 	}
 
-	if univ.PrivKey == nil {
+	if vars.PrivKey == nil {
 		paint.Error("Private key not yet configured")
 		c.JSON(500, gin.H{
 			"message": "Internal server error",
@@ -53,7 +54,7 @@ func HandleDeployment(c *gin.Context) {
 		return
 	}
 
-	decBodyBits, decryptErr := rsa.DecryptPKCS1v15(nil, univ.PrivKey, encBodyBits)
+	decBodyBits, decryptErr := rsa.DecryptPKCS1v15(nil, vars.PrivKey, encBodyBits)
 	if decryptErr != nil {
 		paint.Error("Error decrypting request body: ", decryptErr)
 		c.JSON(500, gin.H{
@@ -65,7 +66,7 @@ func HandleDeployment(c *gin.Context) {
 	}
 
 	// Deserialize the decrypted request body
-	var req univ.DeploymentRequest
+	var req types.DeploymentRequest
 	jsonErr := json.Unmarshal(decBodyBits, &req)
 	if jsonErr != nil {
 		paint.Error("Error deserializing request body: ", jsonErr)

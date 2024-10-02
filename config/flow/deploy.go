@@ -10,7 +10,7 @@ import (
 
 	"github.com/Techzy-Programmer/d2m/config/db"
 	"github.com/Techzy-Programmer/d2m/config/paint"
-	"github.com/Techzy-Programmer/d2m/config/univ"
+	"github.com/Techzy-Programmer/d2m/config/types"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/transport"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
@@ -18,7 +18,7 @@ import (
 
 // ToDo: Implememt comprehensive logging for deployment with timestamps and unique identifier
 
-func StartDeployment(req *univ.DeploymentRequest) {
+func StartDeployment(req *types.DeploymentRequest) {
 	homeDir, hdirErr := getUserHomeDirectory(req.LocalUser)
 	if hdirErr != nil {
 		paint.Error("Error getting user home directory: ", hdirErr)
