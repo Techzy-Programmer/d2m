@@ -7,6 +7,7 @@ require (
 	github.com/fatih/color v1.17.0
 	github.com/gin-gonic/gin v1.10.0
 	github.com/go-git/go-git/v5 v5.12.0
+	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/urfave/cli/v2 v2.27.4
 	golang.org/x/crypto v0.27.0
 	gorm.io/driver/sqlite v1.5.6

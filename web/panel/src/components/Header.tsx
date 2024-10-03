@@ -1,10 +1,12 @@
 import { ActionIcon, Card, Flex, Group, Image, Input, Title, useMantineColorScheme } from '@mantine/core';
-import { useMeta } from '../state/use-meta';
 import { Search, SunMoon } from "lucide-react";
+import { useMeta } from '../state/use-meta';
+import { useAuth } from '../state/use-auth';
 
 export default function Header() {
   const { toggleColorScheme } = useMantineColorScheme();
-  const { pageTitle, loggedIn } = useMeta();
+  const { pageTitle } = useMeta();
+  const { loggedIn } = useAuth();
 
   return (
     <Card

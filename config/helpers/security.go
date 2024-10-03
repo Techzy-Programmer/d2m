@@ -7,8 +7,11 @@ import (
 	"encoding/base64"
 	"encoding/pem"
 	"errors"
+	"io"
+	"time"
 
 	"github.com/Techzy-Programmer/d2m/config/vars"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 func GetPrivateKey(privText string) (*rsa.PrivateKey, error) {
@@ -53,4 +56,39 @@ func RSADecryptWithPrivateKey(b64Ciper string) (string, error) {
 	}
 
 	return string(decryptedData), nil
+}
+
+func GenerateSecureRandomString(n int) (string, error) {
+	bytes := make([]byte, n)
+	if _, err := io.ReadFull(rand.Reader, bytes); err != nil {
+		return "", err
+	}
+
+	return base64.URLEncoding.EncodeToString(bytes), nil
+}
+
+func GenerateJWTToken(secret string) (string, error) {
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.Claims(jwt.RegisteredClaims{
+		ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24 * 7)),
+		IssuedAt:  jwt.NewNumericDate(time.Now()),
+		Issuer:    "d2m-cli",
+	}))
+
+	return token.SignedString([]byte(secret))
+}
+
+func VerifyJWTToken(tokenString, secret string) (jwt.MapClaims, error) {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		return []byte(secret), nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok || !token.Valid {
+		return nil, errors.New("invalid token")
+	}
+
+	return claims, nil
 }

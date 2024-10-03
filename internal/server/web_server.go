@@ -23,10 +23,16 @@ func StartWebServer(port string) {
 	{
 		api.POST("/deploy", handler.HandleDeployment)
 		api.POST("/auth", handler.HandleAuth)
+		handlePostAuthAPI(*api.Group("/mg"))
 	}
 
 	paint.Info("Serving backend at :" + port)
 	if err := router.Run(":" + port); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func handlePostAuthAPI(fh gin.RouterGroup) {
+	fh.Use(handler.VerifySession)
+	fh.GET("/meta", handler.HandleMeta)
 }

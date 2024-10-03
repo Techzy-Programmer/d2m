@@ -171,9 +171,16 @@ func requestConfig() {
 		return
 	}
 
+	jwtSecret, jwtErr := helpers.GenerateSecureRandomString(32)
+	if jwtErr != nil {
+		paint.Error("Error: ", jwtErr)
+		return
+	}
+
 	db.SetConfig("user.GHPAT", ghPAT)
 	db.SetConfig("user.HasConfig", true)
 	db.SetConfig("user.WebPort", webPort)
+	db.SetConfig("app.JWTSecret", jwtSecret)
 	db.SetConfig("user.GHUsername", ghUsername)
 	db.SetConfig("user.PrivateKey", string(privKey))
 	db.SetConfig("user.AccessPwd", string(cryptPwdBytes))

@@ -1,15 +1,16 @@
 import { useCallback } from 'react';
 
 interface FetchOptions {
-  method?: string;
   headers?: Record<string, string>;
+  signal?: AbortSignal;
+  timeout?: number;
+  method?: string;
   body?: any;
-  timeout?: number; // ms
 }
 
 export default function useFetch() {
   const fetchData = useCallback(
-    async (url: string, options?: FetchOptions) => {
+    async <T>(url: string, options?: FetchOptions) => {
       const controller = new AbortController();
       const { signal } = controller;
 
@@ -20,36 +21,28 @@ export default function useFetch() {
         : null;
 
       try {
+        const isObject = typeof options?.body === 'object';
         const response = await fetch(url, {
           method: options?.method || 'GET',
+          credentials: 'include',
           headers: {
-            'Content-Type': 'application/json',
+            'Content-Type': isObject ? 'application/json' : 'text/plain',
             ...options?.headers,
           },
           body: options?.body ?
-            typeof options.body === "object" ? 
-              JSON.stringify(options.body)
+            isObject ? JSON.stringify(options.body)
               : options.body
             : undefined,
-          signal,
+          signal : options?.signal || signal,
         });
 
-        if (!response.ok) {
-          throw new Error(`Error: ${response.status}`);
-        }
-
         const data = await response.json();
-
-        return { data, error: null };
+        return { data: data as T, code: response.status };
       } catch (error: any) {
-        if (signal.aborted) {
-          return { data: null, error: 'Request aborted due to timeout' };
-        }
-        return { data: null, error: error.message || 'Something went wrong' };
+        if (signal.aborted) return { error: 'Request aborted due to timeout' };
+        return { error: error.message || 'Something went wrong' };
       } finally {
-        if (timeoutId) {
-          clearTimeout(timeoutId);
-        }
+        if (timeoutId) clearTimeout(timeoutId);
       }
     }, []);
 

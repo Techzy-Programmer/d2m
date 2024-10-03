@@ -21,7 +21,7 @@ func HandleAuth(c *gin.Context) {
 	decPayload, decErr := helpers.RSADecryptWithPrivateKey(b64Payload)
 	if decErr != nil {
 		c.JSON(400, gin.H{
-			"message": "Bad payload",
+			"message": "Request payload was found defective",
 			"ok":      false,
 		})
 		return
@@ -30,15 +30,57 @@ func HandleAuth(c *gin.Context) {
 	compErr := bcrypt.CompareHashAndPassword([]byte(accessPwd), []byte(decPayload))
 	if compErr != nil {
 		c.JSON(401, gin.H{
-			"message": "Unauthorized",
+			"message": "Credentials do not match",
 			"ok":      false,
 		})
 		return
 	}
 
-	// ToDo: Generate a JWT token and send it back
+	tok, tokErr := helpers.GenerateJWTToken(db.GetConfig("app.JWTSecret", ""))
+	if tokErr != nil {
+		c.JSON(500, gin.H{
+			"message": "Internal server error (Token generation)",
+			"ok":      false,
+		})
+		return
+	}
+
+	exp := 3600 * 24 * 7
+	c.SetCookie("access_token", tok, exp, "/api", "", false, true)
+
 	c.JSON(200, gin.H{
-		"message": "Authorized",
+		"message": "Welcome to D2M Web panel experience",
+		"ok":      true,
+	})
+}
+
+func VerifySession(c *gin.Context) {
+	cookieToken, err := c.Cookie("access_token")
+	if err != nil {
+		c.JSON(401, gin.H{
+			"message": "No active session, please authenticate",
+			"ok":      false,
+		})
+		c.Abort()
+		return
+	}
+
+	_, tokErr := helpers.VerifyJWTToken(cookieToken, db.GetConfig("app.JWTSecret", ""))
+	if tokErr != nil {
+		c.JSON(401, gin.H{
+			"message": "Session expired, please re-authenticate",
+			"ok":      false,
+		})
+		c.Abort()
+		return
+	}
+
+	c.Next()
+}
+
+func HandleMeta(c *gin.Context) {
+	c.JSON(200, gin.H{
+		"message": "Meta data",
 		"ok":      true,
 	})
 }

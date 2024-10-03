@@ -1,14 +1,20 @@
 import { Badge, Box, Button, Center, Group, PasswordInput, rem, Stack, Text } from "@mantine/core";
 import { FileKey2, Upload, X, ChevronRight, LogIn } from "lucide-react";
+import { isFetchSuccess, showToast } from "../utils/general";
 import { Dropzone, FileWithPath } from '@mantine/dropzone';
 import useRSA from "../hooks/useRSAEncryption";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../state/use-auth";
 import { useEffect, useState } from "react";
+import { RespType } from "../utils/types";
 import useFetch from "../hooks/useFetch";
 
 const iconSz = { width: rem(52), height: rem(52) };
 
 export default function Auth() {
   const fetchData = useFetch();
+  const navigate = useNavigate();
+  const { setLoggedIn } = useAuth();
   const [busy, setBusy] = useState(false);
   const [pubKey, setPubKey] = useState('');
   const [accessPwd, setAccessPwd] = useState('');
@@ -29,17 +35,39 @@ export default function Auth() {
     if (hasRSAError || accessPwd === "") return;
     setBusy(true);
 
-    const { data, error } = await fetchData("/api/auth", {
+    const fetch = await fetchData<RespType>("/api/auth", {
       body: encrypt(accessPwd),
       method: "POST",
     });
 
     setBusy(false);
-    if (error) {
-      console.log(error);
-    } else {
-      console.log(data);
+
+    if (!isFetchSuccess(fetch)) {
+      return showToast({
+        message: fetch.error || "Something went wrong",
+        title: "Failed To Fetch",
+        status: "issue",
+      });
     }
+
+    const { code, data } = fetch;
+
+    if (code !== 200) {
+      return showToast({
+        title: "Authentication Failed",
+        message: data.message,
+        status: "warn",
+      });
+    }
+
+    showToast({
+      title: "Authentication Successful",
+      message: data.message,
+      status: "ok",
+    });
+
+    setLoggedIn(true);
+    navigate("/");
   }
 
   return (
