@@ -2,6 +2,7 @@ package helpers
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -79,4 +80,34 @@ func BodyAsText(req *http.Request) string {
 	}
 
 	return string(body)
+}
+
+func GetRelativeDuration(startTime int64) string {
+	now := time.Now().Unix()
+	duration := now - startTime
+
+	seconds := duration
+	minutes := seconds / 60
+	hours := minutes / 60
+	days := hours / 24
+	weeks := days / 7
+	months := days / 30
+	years := days / 365
+
+	switch {
+	case years > 0:
+		return fmt.Sprintf("%d years", years)
+	case months > 0:
+		return fmt.Sprintf("%d months", months)
+	case weeks > 0:
+		return fmt.Sprintf("%d weeks", weeks)
+	case days > 0:
+		return fmt.Sprintf("%d days", days)
+	case hours > 0:
+		return fmt.Sprintf("%d hours", hours)
+	case minutes > 0:
+		return fmt.Sprintf("%d minutes", minutes)
+	default:
+		return fmt.Sprintf("%d seconds", seconds)
+	}
 }

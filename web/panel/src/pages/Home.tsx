@@ -1,12 +1,12 @@
-import { Box, Center, Space } from "@mantine/core";
-import { HomeIcon } from "lucide-react";
+import { useMeta } from "../state/use-meta";
+import HomeMeta from "./chunks/HomeMeta";
 
 export default function Home() {
+  const { metadata } = useMeta();
+
   return (
-    <Center mih={500}>
-      <HomeIcon />
-      <Space w="xs" />
-      <Box>Home</Box>
-    </Center>
+    <>
+      <HomeMeta {...metadata} />
+    </>
   )
 }

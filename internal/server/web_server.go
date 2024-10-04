@@ -35,4 +35,5 @@ func StartWebServer(port string) {
 func handlePostAuthAPI(fh gin.RouterGroup) {
 	fh.Use(handler.VerifySession)
 	fh.GET("/meta", handler.HandleMeta)
+	fh.GET("/logout", handler.HandleLogout)
 }

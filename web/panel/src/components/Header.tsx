@@ -1,19 +1,27 @@
-import { ActionIcon, Card, Flex, Group, Image, Input, Title, useMantineColorScheme } from '@mantine/core';
-import { Search, SunMoon } from "lucide-react";
+import { ActionIcon, Card, Flex, Group, Image, Input, Menu, Title, useComputedColorScheme, useMantineColorScheme } from '@mantine/core';
+import { Cog, EllipsisVertical, LogOut, Moon, Search, Sun } from "lucide-react";
 import { useMeta } from '../state/use-meta';
 import { useAuth } from '../state/use-auth';
+import useFetch from '../hooks/useFetch';
 
 export default function Header() {
   const { toggleColorScheme } = useMantineColorScheme();
+  const isDark = useComputedColorScheme() === "dark";
   const { pageTitle } = useMeta();
   const { loggedIn } = useAuth();
+  const fetchData = useFetch();
+
+  async function handleLogout() {
+    await fetchData("/api/mg/logout");
+    window.location.reload();
+  }
 
   return (
     <Card
       withBorder
       radius={0}
       shadow='md'
-      style={{ position: 'sticky', top: 0, zIndex: 1000 }}
+      style={{ position: 'sticky', top: 0, zIndex: 100 }}
     >
       <Flex
         p={0}
@@ -38,20 +46,48 @@ export default function Header() {
             <Input
               readOnly
               radius={50}
-              w={150}
               variant='filled'
               placeholder='Search...'
+              w={{ xs: 115, sm: 180 }}
               leftSection={<Search />}
             />
           )}
-          <ActionIcon
-            aria-label='Theme switch icon'
-            onClick={toggleColorScheme}
-            variant='subtle'
-            size="xl"
-          >
-            <SunMoon size={28} />
-          </ActionIcon>
+          <Menu shadow="md" width={200}>
+            <Menu.Target>
+              <ActionIcon
+                aria-label='Menu button'
+                variant='light'
+                size="lg"
+                py={18}
+              >
+                <EllipsisVertical />
+              </ActionIcon>
+            </Menu.Target>
+
+            <Menu.Dropdown>
+              <Menu.Label>Application</Menu.Label>
+              <Menu.Item
+                leftSection={isDark ?  <Sun /> : <Moon />}
+                onClick={toggleColorScheme}
+              >
+                Switch to {isDark ? "light" : "dark"} theme
+              </Menu.Item>
+              {loggedIn && (
+                <>
+                  <Menu.Item leftSection={<Cog />}>
+                    Settings
+                  </Menu.Item>
+                  <Menu.Item
+                    color='red'
+                    onClick={handleLogout}
+                    leftSection={<LogOut />}
+                  >
+                    Logout
+                  </Menu.Item>
+                </>
+              )}
+            </Menu.Dropdown>
+          </Menu>
         </Group>
       </Flex>
     </Card>

@@ -3,9 +3,16 @@ package handler
 import (
 	"github.com/Techzy-Programmer/d2m/config/db"
 	"github.com/Techzy-Programmer/d2m/config/helpers"
+	"github.com/Techzy-Programmer/d2m/config/vars"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 )
+
+type meta struct {
+	WebPort string `json:"webPort"`
+	TcpPort string `json:"tcpPort"`
+	Uptime  string `json:"uptime"`
+}
 
 func HandleAuth(c *gin.Context) {
 	accessPwd := db.GetConfig("user.AccessPwd", "")
@@ -50,6 +57,7 @@ func HandleAuth(c *gin.Context) {
 
 	c.JSON(200, gin.H{
 		"message": "Welcome to D2M Web panel experience",
+		"meta":    getMeta(),
 		"ok":      true,
 	})
 }
@@ -80,7 +88,21 @@ func VerifySession(c *gin.Context) {
 
 func HandleMeta(c *gin.Context) {
 	c.JSON(200, gin.H{
-		"message": "Meta data",
+		"message": "Meta data retrieved successfully",
+		"meta":    getMeta(),
 		"ok":      true,
 	})
+}
+
+func HandleLogout(c *gin.Context) {
+	c.SetCookie("access_token", "", -1, "/api", "", false, true)
+	c.Redirect(302, "/auth")
+}
+
+func getMeta() *meta {
+	return &meta{
+		WebPort: db.GetConfig("user.WebPort", ""),
+		TcpPort: db.GetConfig("daemon.Port", ""),
+		Uptime:  helpers.GetRelativeDuration(vars.StartedAt),
+	}
 }

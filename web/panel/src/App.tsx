@@ -7,7 +7,8 @@ import { isFetchSuccess, showToast } from './utils/general';
 import { Notifications } from '@mantine/notifications';
 import { MantineProvider } from "@mantine/core"
 import { useAuth } from './state/use-auth';
-import { RespType } from './utils/types';
+import { useMeta } from './state/use-meta';
+import { MetaResp } from './utils/types';
 import Header from "./components/Header"
 import useFetch from './hooks/useFetch'
 import Loading from './pages/Loading';
@@ -19,6 +20,7 @@ import "./App.css"
 
 function App() {
   const { loggedIn, loading, setLoading, setLoggedIn } = useAuth();
+  const { setPageTitle, setMetadata } = useMeta();
   const fetchData = useFetch();
 
   useEffect(() => {
@@ -27,7 +29,7 @@ function App() {
 
     (async () => {
       const { signal } = abt;
-      const fetch = await fetchData<RespType>('/api/mg/meta', { signal });
+      const fetch = await fetchData<MetaResp>('/api/mg/meta', { signal });
       setLoading(false);
 
       if (!isFetchSuccess(fetch)) {
@@ -48,6 +50,8 @@ function App() {
         });
       }
 
+      setMetadata(data.meta);
+      setPageTitle("Home");
       setLoggedIn(true);
 
       showToast({

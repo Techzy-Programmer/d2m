@@ -6,6 +6,7 @@ import (
 )
 
 var (
+	StartedAt    int64
 	IsProd       = false
 	AliveChannel = make(chan bool)
 	GHActionIps  = []string{}

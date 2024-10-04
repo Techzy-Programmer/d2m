@@ -6,8 +6,9 @@ import useRSA from "../hooks/useRSAEncryption";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../state/use-auth";
 import { useEffect, useState } from "react";
-import { RespType } from "../utils/types";
+import { MetaResp } from "../utils/types";
 import useFetch from "../hooks/useFetch";
+import { useMeta } from "../state/use-meta";
 
 const iconSz = { width: rem(52), height: rem(52) };
 
@@ -19,6 +20,7 @@ export default function Auth() {
   const [pubKey, setPubKey] = useState('');
   const [accessPwd, setAccessPwd] = useState('');
   const { rsaEncError, encrypt } = useRSA(pubKey);
+  const { setPageTitle, setMetadata } = useMeta();
   const hasRSAError = rsaEncError;
 
   useEffect(() => {
@@ -35,7 +37,7 @@ export default function Auth() {
     if (hasRSAError || accessPwd === "") return;
     setBusy(true);
 
-    const fetch = await fetchData<RespType>("/api/auth", {
+    const fetch = await fetchData<MetaResp>("/api/auth", {
       body: encrypt(accessPwd),
       method: "POST",
     });
@@ -66,6 +68,8 @@ export default function Auth() {
       status: "ok",
     });
 
+    setMetadata(data.meta);
+    setPageTitle("Home");
     setLoggedIn(true);
     navigate("/");
   }

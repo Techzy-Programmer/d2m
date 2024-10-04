@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/Techzy-Programmer/d2m/config/db"
 	"github.com/Techzy-Programmer/d2m/config/helpers"
@@ -27,6 +28,8 @@ var dc daemonConfig
 
 // Synthetic init function
 func synInit() {
+	vars.StartedAt = time.Now().Unix()
+
 	if vars.IsProd {
 		gin.SetMode(gin.ReleaseMode)
 	}
