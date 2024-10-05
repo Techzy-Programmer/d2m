@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/Techzy-Programmer/d2m/config/helpers"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -17,7 +16,7 @@ var dbi *gorm.DB // Database instance
 var migTables = []interface{}{&Config[any]{}, &Deployment{}, &Log{}}
 
 func init() {
-	configPath, err := helpers.GetUserConfigPath("d2m")
+	configPath, err := getUserConfigPath("d2m")
 	if err != nil {
 		log.Fatalf("Failed to get config path: %v", err)
 	}

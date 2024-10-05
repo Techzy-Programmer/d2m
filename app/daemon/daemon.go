@@ -46,7 +46,7 @@ func LaunchDaemon() {
 	synInit()
 	fmt.Println("Spinning up the daemon process...")
 
-	go helpers.ScheduleGHActionIPFetch()
+	go scheduleGHActionIPFetch()
 	go server.StartWebServer(dc.webPort)
 	go startDaemonTCPServer()
 

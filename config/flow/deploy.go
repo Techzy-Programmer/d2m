@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/Techzy-Programmer/d2m/config/db"
-	"github.com/Techzy-Programmer/d2m/config/helpers"
 	"github.com/Techzy-Programmer/d2m/config/paint"
 	"github.com/Techzy-Programmer/d2m/config/types"
 	"github.com/go-git/go-git/v5"
@@ -22,7 +21,7 @@ func StartDeployment(req *types.DeploymentRequest) {
 	success := false
 
 	deployment := &db.Deployment{
-		ID:      helpers.GenerateSecure4DigitNumber(),
+		ID:      generateSecure4DigitNumber(),
 		StartAt: time.Now(),
 		Branch:  req.Branch,
 		Repo:    req.RepoPath,

@@ -2,7 +2,6 @@ package handler
 
 import (
 	"github.com/Techzy-Programmer/d2m/config/db"
-	"github.com/Techzy-Programmer/d2m/config/helpers"
 	"github.com/Techzy-Programmer/d2m/config/vars"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
@@ -24,8 +23,8 @@ func HandleAuth(c *gin.Context) {
 		return
 	}
 
-	b64Payload := helpers.BodyAsText(c.Request)
-	decPayload, decErr := helpers.RSADecryptWithPrivateKey(b64Payload)
+	b64Payload := bodyAsText(c.Request)
+	decPayload, decErr := rsaDecryptWithPrivateKey(b64Payload)
 	if decErr != nil {
 		c.JSON(400, gin.H{
 			"message": "Request payload was found defective",
@@ -43,7 +42,7 @@ func HandleAuth(c *gin.Context) {
 		return
 	}
 
-	tok, tokErr := helpers.GenerateJWTToken(db.GetConfig("app.JWTSecret", ""))
+	tok, tokErr := generateJWTToken(db.GetConfig("app.JWTSecret", ""))
 	if tokErr != nil {
 		c.JSON(500, gin.H{
 			"message": "Internal server error (Token generation)",
@@ -73,7 +72,7 @@ func VerifySession(c *gin.Context) {
 		return
 	}
 
-	_, tokErr := helpers.VerifyJWTToken(cookieToken, db.GetConfig("app.JWTSecret", ""))
+	_, tokErr := verifyJWTToken(cookieToken, db.GetConfig("app.JWTSecret", ""))
 	if tokErr != nil {
 		c.JSON(401, gin.H{
 			"message": "Session expired, please re-authenticate",
@@ -103,6 +102,6 @@ func getMeta() *meta {
 	return &meta{
 		WebPort: db.GetConfig("user.WebPort", ""),
 		TcpPort: db.GetConfig("daemon.Port", ""),
-		Uptime:  helpers.GetRelativeDuration(vars.StartedAt),
+		Uptime:  getRelativeDuration(vars.StartedAt),
 	}
 }

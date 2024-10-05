@@ -171,7 +171,7 @@ func requestConfig() {
 		return
 	}
 
-	jwtSecret, jwtErr := helpers.GenerateSecureRandomString(32)
+	jwtSecret, jwtErr := generateSecureRandomString(32)
 	if jwtErr != nil {
 		paint.Error("Error: ", jwtErr)
 		return
