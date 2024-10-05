@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/Techzy-Programmer/d2m/config/helpers"
 	"gorm.io/driver/sqlite"
@@ -13,7 +14,7 @@ import (
 )
 
 var dbi *gorm.DB // Database instance
-var migTables = []interface{}{&Config[any]{}}
+var migTables = []interface{}{&Config[any]{}, &Deployment{}, &Log{}}
 
 func init() {
 	configPath, err := helpers.GetUserConfigPath("d2m")
@@ -59,4 +60,24 @@ func (c *Config[T]) BeforeSave(tx *gorm.DB) (err error) {
 
 func (c *Config[T]) AfterFind(tx *gorm.DB) (err error) {
 	return json.Unmarshal(c.RawValue, &c.Value)
+}
+
+type Deployment struct {
+	ID         uint `gorm:"primaryKey"`
+	Branch     string
+	StartAt    time.Time
+	EndAt      time.Time
+	CommitHash string
+	CommitMsg  string
+	Repo       string
+	Status     string
+	Logs       []Log `gorm:"foreignKey:DeployID"`
+}
+
+type Log struct {
+	ID        uint `gorm:"primaryKey"`
+	Level     uint
+	Message   string
+	Timestamp int64
+	DeployID  *uint
 }

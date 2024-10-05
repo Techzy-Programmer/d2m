@@ -1,14 +1,14 @@
 package flow
 
 import (
-	"errors"
 	"os"
 	"os/exec"
-	"os/user"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/Techzy-Programmer/d2m/config/db"
+	"github.com/Techzy-Programmer/d2m/config/helpers"
 	"github.com/Techzy-Programmer/d2m/config/paint"
 	"github.com/Techzy-Programmer/d2m/config/types"
 	"github.com/go-git/go-git/v5"
@@ -19,6 +19,17 @@ import (
 // ToDo: Implememt comprehensive logging for deployment with timestamps and unique identifier
 
 func StartDeployment(req *types.DeploymentRequest) {
+	success := false
+
+	deployment := &db.Deployment{
+		ID:      helpers.GenerateSecure4DigitNumber(),
+		StartAt: time.Now(),
+		Branch:  req.Branch,
+		Repo:    req.RepoPath,
+	}
+
+	defer saveDeployment(deployment, &success)
+
 	homeDir, hdirErr := getUserHomeDirectory(req.LocalUser)
 	if hdirErr != nil {
 		paint.Error("Error getting user home directory: ", hdirErr)
@@ -39,7 +50,7 @@ func StartDeployment(req *types.DeploymentRequest) {
 	}
 
 	// Let's fetch the repo from GitHub
-	ghErr := ensureGHRepo(req.RepoPath, parentPath, 3)
+	ghErr := ensureGHRepo(req.RepoPath, parentPath, 3, deployment)
 	if ghErr != nil {
 		paint.Error("Error fetching GitHub repository: ", ghErr)
 		return
@@ -53,9 +64,11 @@ func StartDeployment(req *types.DeploymentRequest) {
 		paint.Error("Error running post-deployment commands: ", depExErr)
 		return
 	}
+
+	success = true
 }
 
-func ensureGHRepo(repoPth string, parentPath string, retry int) error {
+func ensureGHRepo(repoPth string, parentPath string, retry int, deployment *db.Deployment) error {
 	repoParts := strings.Split(repoPth, "/")
 	appName := repoParts[1]
 	appPth := path.Join(parentPath, appName)
@@ -90,12 +103,19 @@ func ensureGHRepo(repoPth string, parentPath string, retry int) error {
 			}
 		}
 
+		hash, msg, commitErr := getCommitData(repo)
+		if commitErr != nil {
+			return commitErr
+		}
+
+		deployment.CommitHash = hash
+		deployment.CommitMsg = msg
 		return nil
 	}
 
 	// Clone the repository
 	paint.Info("Cloning repository: ", appName)
-	_, cloneErr := git.PlainClone(appPth, false, &git.CloneOptions{
+	repo, cloneErr := git.PlainClone(appPth, false, &git.CloneOptions{
 		URL:  "https://github.com/" + repoPth,
 		Auth: authOpt,
 	})
@@ -104,12 +124,19 @@ func ensureGHRepo(repoPth string, parentPath string, retry int) error {
 		if retry > 0 {
 			paint.Error("Error cloning repository: ", cloneErr)
 			paint.Info("Retrying...")
-			return ensureGHRepo(repoPth, parentPath, retry-1)
+			return ensureGHRepo(repoPth, parentPath, retry-1, deployment)
 		}
 
 		return cloneErr
 	}
 
+	hash, msg, commitErr := getCommitData(repo)
+	if commitErr != nil {
+		return commitErr
+	}
+
+	deployment.CommitHash = hash
+	deployment.CommitMsg = msg
 	return nil
 }
 
@@ -129,14 +156,4 @@ func execCmds(cmds []string, wdPath string, stopOnErr bool) error {
 	}
 
 	return nil
-}
-
-func getUserHomeDirectory(username string) (string, error) {
-	usr, err := user.Lookup(username)
-	if err != nil {
-		return "", errors.New("User not found: " + username)
-	}
-
-	// Return the home directory
-	return usr.HomeDir, nil
 }

@@ -1,9 +1,11 @@
 package helpers
 
 import (
+	"crypto/rand"
 	"errors"
 	"fmt"
 	"io"
+	"math/big"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -110,4 +112,17 @@ func GetRelativeDuration(startTime int64) string {
 	default:
 		return fmt.Sprintf("%d seconds", seconds)
 	}
+}
+
+func GenerateSecure4DigitNumber() uint {
+	min := 1000
+	max := 9999
+	rangeVal := big.NewInt(int64(max - min + 1))
+
+	n, err := rand.Int(rand.Reader, rangeVal)
+	if err != nil {
+		return 0
+	}
+
+	return uint(n.Int64() + int64(min))
 }
