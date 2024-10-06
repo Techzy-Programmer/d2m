@@ -77,7 +77,7 @@ func HandleDeployment(c *gin.Context) {
 		return
 	}
 
-	flow.StartDeployment(&req)
+	flow.StartDeployment(&req) // ToDo: Make it concurrent
 
 	c.JSON(200, gin.H{
 		"message": "Deployment triggered successfully",
