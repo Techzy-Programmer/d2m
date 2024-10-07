@@ -105,3 +105,13 @@ func getMeta() *meta {
 		Uptime:  getRelativeDuration(vars.StartedAt),
 	}
 }
+
+func HandleGetDeployments(c *gin.Context) {
+	deployments := db.GetAllDeployments()
+
+	c.JSON(200, gin.H{
+		"message":     "Deployments fetched successfully",
+		"deployments": deployments,
+		"ok":          true,
+	})
+}
