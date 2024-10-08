@@ -25,3 +25,16 @@ type Deployment = {
 export type DeploymentsResp = Resp & {
   deployments: Deployment[]
 }
+
+type Log = {
+  ID: number
+  Level: number
+  DeployID: number
+  Timestamp: string
+  Message: string
+}
+
+export type DeploymentDetailResp = Resp & {
+  meta: Deployment
+  logs: Log[]
+}
