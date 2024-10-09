@@ -2,23 +2,10 @@ import useFetch from "../hooks/useFetch";
 import HomeMeta from "./chunks/HomeMeta";
 import { useEffect, useState } from "react";
 import { useMeta } from "../state/use-meta";
+import { formatDate } from "../utils/helpers";
 import { DeploymentsResp } from "../utils/types";
 import { Center, Paper, Table } from "@mantine/core";
 import { isFetchSuccess, showToast } from "../utils/general";
-
-function formatDate(date: string) {
-  return (new Date(date).toLocaleString('en-GB', {
-    weekday: 'short',
-    year: '2-digit',
-    month: 'short',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    timeZone: "IST",
-    hour12: true
-  })) + " IST";
-}
 
 export default function Home() {
   const [deployments, setDeployments] = useState<DeploymentsResp["deployments"]>([]);

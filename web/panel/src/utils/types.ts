@@ -30,8 +30,9 @@ type Log = {
   ID: number
   Level: number
   DeployID: number
-  Timestamp: string
+  Timestamp: number
   Message: string
+  Title: string
 }
 
 export type DeploymentDetailResp = Resp & {
