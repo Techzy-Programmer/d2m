@@ -3,6 +3,7 @@ import HomeMeta from "./chunks/HomeMeta";
 import { useEffect, useState } from "react";
 import { useMeta } from "../state/use-meta";
 import { formatDate } from "../utils/helpers";
+import { useNavigate } from "react-router-dom";
 import { DeploymentsResp } from "../utils/types";
 import { Center, Paper, Table } from "@mantine/core";
 import { isFetchSuccess, showToast } from "../utils/general";
@@ -10,6 +11,7 @@ import { isFetchSuccess, showToast } from "../utils/general";
 export default function Home() {
   const [deployments, setDeployments] = useState<DeploymentsResp["deployments"]>([]);
   const { metadata } = useMeta();
+  const navigate = useNavigate();
   const fetchData = useFetch();
 
   useEffect(() => {
@@ -39,7 +41,11 @@ export default function Home() {
   }, []);
 
   const rows = deployments.map((dep) => (
-    <Table.Tr key={dep.ID}>
+    <Table.Tr
+      key={dep.ID}
+      style={{ cursor: "pointer" }}
+      onClick={() => navigate(`/deployment/${dep.ID}`)}
+    >
       <Table.Td>{dep.ID}</Table.Td>
       <Table.Td>{dep.Repo}</Table.Td>
       <Table.Td>{dep.Branch}</Table.Td>

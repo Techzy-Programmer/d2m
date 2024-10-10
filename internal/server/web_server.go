@@ -37,4 +37,5 @@ func handlePostAuthAPI(fh gin.RouterGroup) {
 	fh.GET("/meta", handler.HandleMeta)
 	fh.GET("/logout", handler.HandleLogout)
 	fh.GET("/get-deployments", handler.HandleGetDeployments)
+	fh.GET("/deployment/:deployID", handler.HandleGetDeploymentDetails)
 }

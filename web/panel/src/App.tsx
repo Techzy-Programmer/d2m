@@ -5,14 +5,13 @@ import '@mantine/notifications/styles.css';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { isFetchSuccess, showToast } from './utils/general';
 import { Notifications } from '@mantine/notifications';
-import { MantineProvider } from "@mantine/core"
+import Deployment from './pages/Deployment';
 import { useAuth } from './state/use-auth';
 import { useMeta } from './state/use-meta';
 import { MetaResp } from './utils/types';
 import Header from "./components/Header"
 import useFetch from './hooks/useFetch'
 import Loading from './pages/Loading';
-import { theme } from "./data/theme"
 import { useEffect } from 'react';
 import Home from './pages/Home';
 import Auth from "./pages/Auth"
@@ -65,11 +64,11 @@ function App() {
     return () => abt.abort();
   }, []);
 
-  const homeNavigation = loading ? <Loading />
-    : (loggedIn ? <Home /> : <Navigate to="/auth" />);
+  if (loading) return <Loading />;
+  const homeNavigation = (loggedIn ? <Home /> : <Navigate to="/auth" />);
 
   return (
-    <MantineProvider defaultColorScheme='auto' theme={theme}>
+    <>
       <Header />
       <Notifications />
 
@@ -77,13 +76,12 @@ function App() {
         <Routes>
           <Route path='/'>
             <Route index element={homeNavigation} />
-            
-            <Route path="/auth" element={loading ? <Loading />
-              : loggedIn ? <Navigate to="/" /> : <Auth />} />
+            <Route path="/auth" element={loggedIn ? <Navigate to="/" /> : <Auth />} />
+            <Route path="/deployment/*" element={loggedIn ? <Deployment /> : <Navigate to="/auth" />} />
           </Route>
         </Routes>
       </BrowserRouter>
-    </MantineProvider>
+    </>
   )
 }
 

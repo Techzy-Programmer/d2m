@@ -1,6 +1,11 @@
+import { isFetchSuccess, showToast } from "../utils/general";
 import { DeploymentDetailResp } from "../utils/types";
 import { useDisclosure } from "@mantine/hooks";
+import { useNavigate } from "react-router-dom";
+import { formatDate } from "../utils/helpers";
+import { useMeta } from "../state/use-meta";
 import { useEffect, useState } from "react";
+import useFetch from "../hooks/useFetch";
 import Loading from "./Loading";
 
 import {
@@ -35,70 +40,64 @@ import {
   AlarmClockPlus,
   BadgeCheckIcon,
 } from "lucide-react";
-import { formatDate } from "../utils/helpers";
 
 export default function Deployment() {
   const [deploymentData, setDeploymentData] = useState<DeploymentDetailResp>();
   const [opened, { toggle }] = useDisclosure(false);
   const [loading, setLoading] = useState(true);
+  const { setPageTitle } = useMeta();
+  const navigate = useNavigate();
+  const fetchData = useFetch();
 
   useEffect(() => {
-    // ToDo: Fetch actual deployment data from API
+    const deployId = window.location.pathname.split("/").pop();
 
-    setLoading(false);
-    setDeploymentData({
-      meta: {
-        CommitHash: "be1457de93b09d2bc999141d96710230adb9e5e9",
-        CommitMsg: "Add basic deployment details ui page",
-        StartAt: "2024-10-06 19:54:15.0509262+05:30",
-        EndAt: "2024-10-06 19:54:16.4255948+05:30",
-        Repo: "Techzy-Programmer/d2m",
-        Status: "failed",
-        Branch: "main",
-        ID: 90,
-      },
-      message: "Deployment details fetched successfully",
-      ok: true,
-      logs: [
-        {
-          ID: 1,
-          Level: 0,
-          DeployID: 90,
-          Timestamp: 1728224655,
-          Message: "Pre-deployment script execution while deploying",
-          Title: "Pre-Deployment Script"
-        },
-        {
-          ID: 1,
-          Level: 1,
-          DeployID: 90,
-          Timestamp: 1728224655,
-          Message: "Runtime data expired",
-          Title: "Data Check"
-        },
-        {
-          ID: 2,
-          Level: 3,
-          DeployID: 90,
-          Timestamp: 1728224656,
-          Message: "Deployment Process Executed",
-          Title: "Deployment Exec"
-        },
-        {
-          ID: 3,
-          Level: 2,
-          DeployID: 90,
-          Timestamp: 1728224656,
-          Message: "Deployment failed",
-          Title: "Deployment Failed"
-        }
-      ]
-    });
+    if (!deployId || Number.isNaN(Number(deployId))) {
+      showToast({
+        message: "Deployment ID not found in URL",
+        title: "URL Parameter Missing",
+        status: "issue"
+      });
+
+      navigate("/");
+      return;
+    }
+
+    setPageTitle("Deployment");
+
+    (async () => {
+      setLoading(true);
+      const { signal } = new AbortController();
+      const fetch = await fetchData<DeploymentDetailResp>(`/api/mg/deployment/${deployId}`, { signal });
+      setLoading(false);
+
+      if (!isFetchSuccess(fetch)) {
+        navigate("/");
+
+        return showToast({
+          message: fetch.error || 'Something went wrong',
+          title: 'Fetch Failed',
+          status: 'issue'
+        });
+      }
+
+      const { code, data } = fetch;
+
+      if (code !== 200) {
+        navigate("/");
+
+        return showToast({
+          title: 'Message From Server',
+          message: data.message,
+          status: 'warn'
+        });
+      }
+
+      setDeploymentData(data);
+    })();
   }, []);
 
-  if (loading) {
-    return <Loading />;
-  }
+  if (loading) return <Loading />;
 
   const { meta } = deploymentData!;
   

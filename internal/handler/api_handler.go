@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"strconv"
+
 	"github.com/Techzy-Programmer/d2m/config/db"
 	"github.com/Techzy-Programmer/d2m/config/vars"
 	"github.com/gin-gonic/gin"
@@ -113,5 +115,35 @@ func HandleGetDeployments(c *gin.Context) {
 		"message":     "Deployments fetched successfully",
 		"deployments": deployments,
 		"ok":          true,
+	})
+}
+
+func HandleGetDeploymentDetails(c *gin.Context) {
+	deployIdStr := c.Param("deployID")
+	uint32DepId, err := strconv.ParseUint(deployIdStr, 10, 32)
+	if err != nil {
+		c.JSON(400, gin.H{
+			"message": "Invalid deployment ID",
+			"ok":      false,
+		})
+		return
+	}
+
+	deployId := uint(uint32DepId)
+	logs := db.GetAllLogsForDeploy(deployId)
+	deployment, depErr := db.GetDeploymentByID(deployId)
+	if depErr != nil || logs == nil {
+		c.JSON(404, gin.H{
+			"message": "Deployment not found",
+			"ok":      false,
+		})
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"message": "Deployment details retrieved",
+		"meta":    deployment,
+		"logs":    logs,
+		"ok":      true,
 	})
 }

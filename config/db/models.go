@@ -76,6 +76,7 @@ type Deployment struct {
 type Log struct {
 	ID        uint `gorm:"primaryKey"`
 	Level     uint
+	Title     string
 	Message   string
 	Timestamp int64
 	DeployID  *uint

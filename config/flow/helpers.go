@@ -39,10 +39,11 @@ const (
 	okLvl
 )
 
-func storeDeployLog(lvl uint, msg string) {
+func storeDeployLog(lvl uint, title string, msg string) {
 	deployLogStorage = append(deployLogStorage, db.Log{
 		Timestamp: time.Now().Unix(),
 		DeployID:  &currentDeployID,
+		Title:     title,
 		Message:   msg,
 		Level:     lvl,
 	})
@@ -80,7 +81,7 @@ func saveDeployment(deploy *db.Deployment, success *bool) {
 		deploy.Status = "failed"
 	}
 
-	storeDeployLog(infoLvl, fmt.Sprintf("Deployment completed with status: %s", deploy.Status))
+	storeDeployLog(infoLvl, "Done", fmt.Sprintf("Deployment completed with status: %s", deploy.Status))
 
 	deploy.Logs = deployLogStorage
 	deploy.EndAt = time.Now()
