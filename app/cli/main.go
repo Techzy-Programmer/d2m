@@ -48,16 +48,19 @@ func main() {
 	}
 
 	app := &cli.App{
-		Name:   "d2m",
-		Usage:  "Managr your deployments with ease",
-		Action: cmd.HandleInitCMD,
+		Name:  "d2m",
+		Usage: "continuous Delivery & Deployment Manager (D2M)\nManage your deployments with ease",
+		Commands: []*cli.Command{
+			cmd.InitCmd,
+			cmd.UpdateCmd,
+		},
 	}
 
 	if err := app.Run(os.Args); err != nil {
 		log.Fatal(err)
 	}
 
-	time.Sleep(1 * time.Second)
+	time.Sleep(500 * time.Millisecond)
 }
 
 func isProcessRunning(pid float64) bool {
