@@ -6,6 +6,7 @@ import (
 )
 
 var (
+	IsDaemon     = false
 	StartedAt    int64
 	IsProd       = false
 	AliveChannel = make(chan bool)

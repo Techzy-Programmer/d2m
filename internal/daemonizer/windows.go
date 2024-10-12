@@ -1,6 +1,6 @@
 //go:build windows
 
-package main
+package daemonizer
 
 // ! It's important to note that this is platform-specific code.
 // ! This code will only run on Windows systems.
@@ -15,7 +15,7 @@ import (
 	"github.com/Techzy-Programmer/d2m/config/paint"
 )
 
-func ensureDaemonRunning() {
+func EnsureDaemonRunning() {
 	paint.Info("Daemonizing process...")
 	cmd := exec.Command(os.Args[0], "--daemon")
 	cmd.Stdout = nil
@@ -36,6 +36,6 @@ func ensureDaemonRunning() {
 	}
 
 	cmd.Process.Release()
-	paint.Success("Daemon started in background!\n")
-	time.Sleep(4 * time.Second)
+	paint.Success("[] D2M daemonized successfully\n")
+	time.Sleep(2 * time.Second)
 }

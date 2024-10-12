@@ -13,6 +13,7 @@ import (
 	"github.com/Techzy-Programmer/d2m/cmd"
 	"github.com/Techzy-Programmer/d2m/config/db"
 	"github.com/Techzy-Programmer/d2m/config/vars"
+	"github.com/Techzy-Programmer/d2m/internal/daemonizer"
 	"github.com/Techzy-Programmer/d2m/internal/ipc"
 	"github.com/urfave/cli/v2"
 )
@@ -32,6 +33,7 @@ func main() {
 	flag.Parse()
 
 	if *daemonFlag {
+		vars.IsDaemon = true
 		daemon.LaunchDaemon()
 		return
 	}
@@ -40,11 +42,13 @@ func main() {
 	pid := db.GetConfig[float64]("daemon.PID")
 
 	if !isProcessRunning(pid) {
-		ensureDaemonRunning()
+		daemonizer.EnsureDaemonRunning()
 
 		if !connectToDaemon() {
 			panic("Unable to connect with daemon over TCP")
 		}
+
+		<-vars.AliveChannel // Wait for daemon to become responsive
 	}
 
 	app := &cli.App{
@@ -102,6 +106,11 @@ func connectToDaemon() bool {
 	port := db.GetConfig[string]("daemon.Port")
 	if port == "" {
 		return false
+	}
+
+	if vars.CLIConn != nil {
+		vars.CLIConn.Close()
+		vars.CLIConn = nil
 	}
 
 	conn, err := net.Dial("tcp", ":"+port)

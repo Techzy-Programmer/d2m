@@ -24,7 +24,7 @@ func HandleConnection(conn net.Conn) {
 
 		data = strings.TrimSpace(data)
 		msg := msg.DeserializeMSG([]byte(data))
-		processMsg(msg, conn)
+		go processMsg(msg, conn) // Fix: Process message in a separate goroutine to keep receiver thread free and avoid deadlocks
 	}
 }
 
@@ -35,7 +35,6 @@ func processMsg(message msg.MSG, conn net.Conn) {
 			// Notify CLI thread that daemon is alive
 			vars.AliveChannel <- true
 			close(vars.AliveChannel)
-			return
 		}
 
 		time.Sleep(10 * time.Second)
