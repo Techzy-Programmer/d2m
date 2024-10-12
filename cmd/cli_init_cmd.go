@@ -1,18 +1,34 @@
 package cmd
 
 import (
+	"time"
+
 	"github.com/Techzy-Programmer/d2m/config/db"
+	"github.com/Techzy-Programmer/d2m/config/msg"
 	"github.com/Techzy-Programmer/d2m/config/paint"
+	"github.com/Techzy-Programmer/d2m/config/vars"
 	"github.com/urfave/cli/v2"
 )
 
-// ToDo: Restart the daemon process after initialization
+var initSuccess = false
 
 var InitCmd = &cli.Command{
 	Name:    "init",
 	Aliases: []string{"i"},
 	Usage:   "Initialize & setup D2M instance on this machine",
 	Action:  handleInitCMD,
+	After:   handleDaemonRestart,
+}
+
+func handleDaemonRestart(*cli.Context) error {
+	if !initSuccess {
+		return nil
+	}
+
+	paint.Notice("\nReloading daemon process...")
+	msg.SendMsg(vars.CLIConn, msg.HaltMSG{Type: msg.HaltMsgType})
+	time.Sleep(2 * time.Second)
+	return nil
 }
 
 func handleInitCMD(*cli.Context) error {
@@ -80,6 +96,7 @@ func requestConfig() {
 	db.SetConfig("user.AccessPwd", string(cryptPwdBytes))
 
 	paint.Success("D2M initialized and configurations saved successfully!")
+	initSuccess = true
 }
 
 func getHelp() {

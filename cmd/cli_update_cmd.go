@@ -2,13 +2,16 @@ package cmd
 
 import (
 	"errors"
+	"os"
 
 	"github.com/Techzy-Programmer/d2m/config/db"
+	"github.com/Techzy-Programmer/d2m/config/msg"
 	"github.com/Techzy-Programmer/d2m/config/paint"
+	"github.com/Techzy-Programmer/d2m/config/vars"
 	"github.com/urfave/cli/v2"
 )
 
-// ToDo: Send incremental updates to daemon process
+var initialWP string
 
 var updateWebPortCmd = &cli.Command{
 	Name:    "web-port",
@@ -50,6 +53,7 @@ var UpdateCmd = &cli.Command{
 	Aliases: []string{"uc"},
 	Usage:   "Updates the configuration one parameter at a time",
 	Before:  checkHasConfig,
+	After:   handleConfigUpdate,
 	Subcommands: []*cli.Command{
 		updateAccessPwdCmd,
 		updateWebPortCmd,
@@ -70,6 +74,15 @@ func checkHasConfig(*cli.Context) error {
 	return nil
 }
 
+func handleConfigUpdate(c *cli.Context) error {
+	msg.SendMsg(vars.CLIConn, msg.ConfigUpdateMSG{
+		Type:  msg.ConfigUpdateMsgType,
+		Which: c.Args().First(),
+	})
+
+	return nil
+}
+
 func handleUpdateAccessPWD(*cli.Context) error {
 	cryptPwdBytes, cryptErr := getAccessPwd()
 	if cryptErr != nil {
@@ -84,9 +97,17 @@ func handleUpdateAccessPWD(*cli.Context) error {
 }
 
 func handleUpdateWebPort(*cli.Context) error {
+	initialWP = db.GetConfig("user.WebPort", "8080")
 	webPort, wpErr := getWebPort()
 	if wpErr != nil {
 		paint.Error("Error: ", wpErr)
+		return nil
+	}
+
+	if initialWP == webPort {
+		paint.Warn("Web port is already set to", webPort)
+		paint.Notice("No changes made, exiting...")
+		os.Exit(0)
 		return nil
 	}
 

@@ -1,12 +1,17 @@
 package server
 
 import (
+	"context"
 	"log"
+	"net/http"
+	"time"
 
 	"github.com/Techzy-Programmer/d2m/config/paint"
 	"github.com/Techzy-Programmer/d2m/internal/handler"
 	"github.com/gin-gonic/gin"
 )
+
+var StopWebServer = make(chan bool)
 
 func StartWebServer(port string) {
 	router := gin.Default()
@@ -26,9 +31,25 @@ func StartWebServer(port string) {
 		handlePostAuthAPI(*api.Group("/mg"))
 	}
 
+	server := &http.Server{
+		Addr:    ":" + port,
+		Handler: router,
+	}
+
 	paint.Info("Serving backend at :" + port)
-	if err := router.Run(":" + port); err != nil {
-		log.Fatal(err)
+
+	go func() {
+		if err := server.ListenAndServe(); err != nil {
+			paint.Warn("Stopping web server...")
+		}
+	}()
+
+	<-StopWebServer
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	if err := server.Shutdown(ctx); err != nil {
+		log.Fatalf("Failed to stop web server: %v", err)
 	}
 }
 

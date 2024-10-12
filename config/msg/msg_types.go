@@ -3,7 +3,9 @@ package msg
 type MSG interface{}
 
 const (
-	PingMsgType = "ping"
+	PingMsgType         = "ping"
+	HaltMsgType         = "halt"
+	ConfigUpdateMsgType = "config-update"
 )
 
 type PingMSG struct {
@@ -11,6 +13,18 @@ type PingMSG struct {
 	IsWelcome bool // Used by daemon on first connection
 }
 
+type HaltMSG struct {
+	Type string
+	Ack  bool // Used by daemon to acknowledge the halt
+}
+
+type ConfigUpdateMSG struct {
+	Type  string
+	Which string
+}
+
 var typeRegistry = map[string]func() interface{}{
-	PingMsgType: func() interface{} { return &PingMSG{} },
+	PingMsgType:         func() interface{} { return &PingMSG{} },
+	HaltMsgType:         func() interface{} { return &HaltMSG{} },
+	ConfigUpdateMsgType: func() interface{} { return &ConfigUpdateMSG{} },
 }

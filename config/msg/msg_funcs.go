@@ -48,6 +48,11 @@ func serializeMSG(msg MSG) string {
 }
 
 func SendMsg(conn net.Conn, msg MSG) int {
+	if conn == nil {
+		paint.Warn("TCP connection not initialised, message failed to send")
+		return 0
+	}
+
 	n, err := conn.Write([]byte(serializeMSG(msg)))
 
 	if err != nil {
