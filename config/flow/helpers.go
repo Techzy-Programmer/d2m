@@ -5,7 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"os"
 	"os/user"
+	"runtime"
 	"time"
 
 	"github.com/Techzy-Programmer/d2m/config/db"
@@ -67,7 +69,21 @@ func getCommitData(repo *git.Repository) (string, string, error) {
 func getUserHomeDirectory(username string) (string, error) {
 	usr, err := user.Lookup(username)
 	if err != nil {
-		return "", errors.New("User not found: " + username)
+		if runtime.GOOS == "windows" {
+			host, hostErr := os.Hostname()
+			if hostErr != nil {
+				return "", errors.New("error getting machine hostname")
+			}
+
+			usr, err = user.Lookup(host + "\\" + username)
+			if err != nil {
+				return "", errors.New("user not found: " + username)
+			}
+
+			return usr.HomeDir, nil
+		}
+
+		return "", errors.New("user not found: " + username)
 	}
 
 	// Return the home directory
