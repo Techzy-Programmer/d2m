@@ -130,7 +130,7 @@ func HandleGetDeploymentDetails(c *gin.Context) {
 	}
 
 	deployId := uint(uint32DepId)
-	logs := db.GetAllLogsForDeploy(deployId)
+	logs := db.GetAllLogsForDeployment(deployId)
 	deployment, depErr := db.GetDeploymentByID(deployId)
 	if depErr != nil || logs == nil {
 		c.JSON(404, gin.H{

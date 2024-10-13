@@ -1,11 +1,11 @@
 package db
 
-func WriteLog(log Log) {
+func SaveDeploymentLog(log DeploymentLog) {
 	dbi.Save(log)
 }
 
-func GetAllLogsForDeploy(deployID uint) []Log {
-	var logs []Log
-	dbi.Where("deploy_id = ?", deployID).Find(&logs)
+func GetAllLogsForDeployment(id uint) []DeploymentLog {
+	var logs []DeploymentLog
+	dbi.Where("deploy_id = ?", id).Find(&logs)
 	return logs
 }

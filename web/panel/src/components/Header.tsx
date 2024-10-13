@@ -1,5 +1,6 @@
 import { ActionIcon, Card, Flex, Group, Image, Input, Menu, Title, useComputedColorScheme, useMantineColorScheme } from '@mantine/core';
 import { Cog, EllipsisVertical, LogOut, Moon, Search, Sun } from "lucide-react";
+import { useNavigate } from 'react-router-dom';
 import { useMeta } from '../state/use-meta';
 import { useAuth } from '../state/use-auth';
 import useFetch from '../hooks/useFetch';
@@ -8,6 +9,7 @@ export default function Header() {
   const { toggleColorScheme } = useMantineColorScheme();
   const isDark = useComputedColorScheme() === "dark";
   const { pageTitle } = useMeta();
+  const navigate = useNavigate();
   const { loggedIn } = useAuth();
   const fetchData = useFetch();
 
@@ -27,7 +29,7 @@ export default function Header() {
         p={0}
         justify="space-between"
       >
-        <Group gap="xs">
+        <Group gap="xs" style={{ cursor: "pointer" }} onClick={() => navigate("/")}>
           <Image
             w={{ xs: 36, sm: 54 }}
             src="/media/d2m.png"

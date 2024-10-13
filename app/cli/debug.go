@@ -4,8 +4,8 @@ import (
 	// "os"
 
 	// "github.com/Techzy-Programmer/d2m/config/flow"
-	"github.com/Techzy-Programmer/d2m/config/paint"
 	// "github.com/Techzy-Programmer/d2m/config/types"
+	"github.com/Techzy-Programmer/d2m/config/paint"
 )
 
 func startDebug() {
@@ -15,7 +15,7 @@ func startDebug() {
 	// 	Branch: 				 "main",
 	// 	AutoSetupDeps:   true,
 	// 	LocalUser:       "risha",
-	// 	LocalParentPath: "Documents\\my-deploy",
+	// 	LocalParentPath: "Documents\\test\\d2m-deploy",
 	// 	RepoPath:        "Node-Bug-Hunter/Hunter-UI",
 	// 	PreDeployCmds:   []string{"mkdir hello-world", "touch hello-world/index.html"},
 	// 	PostDeployCmds:  []string{"touch hello-world/deploy-success.txt"},

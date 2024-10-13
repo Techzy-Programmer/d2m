@@ -32,6 +32,7 @@ type Log = {
   DeployID: number
   Timestamp: number
   Message: string
+  Steps: string
   Title: string
 }
 

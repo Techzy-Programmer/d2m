@@ -10,11 +10,13 @@ import { isFetchSuccess, showToast } from "../utils/general";
 
 export default function Home() {
   const [deployments, setDeployments] = useState<DeploymentsResp["deployments"]>([]);
-  const { metadata } = useMeta();
+  const { metadata, setPageTitle } = useMeta();
   const navigate = useNavigate();
   const fetchData = useFetch();
 
   useEffect(() => {
+    setPageTitle("Home");
+    
     (async () => {
       const resp = await fetchData<DeploymentsResp>("/api/mg/get-deployments");
       

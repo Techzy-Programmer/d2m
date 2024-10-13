@@ -68,20 +68,18 @@ function App() {
   const homeNavigation = (loggedIn ? <Home /> : <Navigate to="/auth" />);
 
   return (
-    <>
+    <BrowserRouter>
       <Header />
       <Notifications />
-
-      <BrowserRouter>
-        <Routes>
-          <Route path='/'>
-            <Route index element={homeNavigation} />
-            <Route path="/auth" element={loggedIn ? <Navigate to="/" /> : <Auth />} />
-            <Route path="/deployment/*" element={loggedIn ? <Deployment /> : <Navigate to="/auth" />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
-    </>
+      
+      <Routes>
+        <Route path='/'>
+          <Route index element={homeNavigation} />
+          <Route path="/auth" element={loggedIn ? <Navigate to="/" /> : <Auth />} />
+          <Route path="/deployment/*" element={loggedIn ? <Deployment /> : <Navigate to="/auth" />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
   )
 }
 

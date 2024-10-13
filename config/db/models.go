@@ -13,7 +13,7 @@ import (
 )
 
 var dbi *gorm.DB // Database instance
-var migTables = []interface{}{&Config[any]{}, &Deployment{}, &Log{}}
+var migTables = []interface{}{&Config[any]{}, &Deployment{}, &DeploymentLog{}}
 
 func init() {
 	configPath, err := getUserConfigPath("d2m")
@@ -70,14 +70,15 @@ type Deployment struct {
 	CommitMsg  string
 	Repo       string
 	Status     string
-	Logs       []Log `gorm:"foreignKey:DeployID"`
+	Logs       []DeploymentLog `gorm:"foreignKey:DeployID"`
 }
 
-type Log struct {
+type DeploymentLog struct {
 	ID        uint `gorm:"primaryKey"`
 	Level     uint
 	Title     string
 	Message   string
+	Steps     string
 	Timestamp int64
-	DeployID  *uint
+	DeployID  uint
 }

@@ -14,6 +14,7 @@ import {
   Card,
   Flex,
   Group,
+  Stack,
   Paper,
   Title,
   Space,
@@ -40,6 +41,13 @@ import {
   AlarmClockPlus,
   BadgeCheckIcon,
 } from "lucide-react";
+
+const statusMap = {
+  "0": "info",
+  "1": "warn",
+  "2": "issue",
+  "3": "ok"
+}
 
 export default function Deployment() {
   const [deploymentData, setDeploymentData] = useState<DeploymentDetailResp>();
@@ -176,7 +184,8 @@ export default function Deployment() {
           <Space h={20} />
           <Timeline active={deploymentData?.logs.length} bulletSize={24} lineWidth={2}>
             {
-              deploymentData?.logs.map(({ Title, Timestamp, ID, Message, Level }, i) => {
+              deploymentData?.logs.map(({ Title: title, Timestamp, ID, Message, Steps, Level }, i) => {
+                const stepsArr: string[][] = JSON.parse(Steps);
                 let icon = <Bookmark size={16} />;
                 let color = "blue";
 
@@ -199,11 +208,22 @@ export default function Deployment() {
                   <Timeline.Item
                     color={color}
                     bullet={icon}
+                    title={title}
                     key={(i + ID) + Timestamp}
-                    title={Title}
                   >
-                    <Text c="dimmed" size="sm">{Message}</Text>
-                    <Text size="xs" mt={4}>{formatDate(Number(Timestamp + "000"))}</Text>
+                    <Card>
+                      <Stack gap={4}>
+                        {Message && <Title c="dimmed" mb={4} order={6}>{Message}</Title>}
+                        {
+                          stepsArr.map(([lvl, msg], i) => (
+                            <Paper shadow="xs" mod={{ status: statusMap[lvl as keyof typeof statusMap] }} p={10} key={`${lvl}-${i}`}>
+                              <Text style={{ wordWrap: "break-word" }} size="sm">{msg}</Text>
+                            </Paper>
+                          ))
+                        }
+                      </Stack>
+                    </Card>
+                    <Text size="xs" c="dimmed" mt={4}>{formatDate(Number(Timestamp + "000"))}</Text>
                   </Timeline.Item>
                 )
               })
