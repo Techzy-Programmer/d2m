@@ -57,6 +57,7 @@ func main() {
 		Commands: []*cli.Command{
 			cmd.InitCmd,
 			cmd.UpdateCmd,
+			cmd.LogsCmd,
 		},
 	}
 
