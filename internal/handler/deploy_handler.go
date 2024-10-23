@@ -1,9 +1,7 @@
 package handler
 
 import (
-	"crypto/rsa"
-	"encoding/base64"
-	"encoding/json"
+	"io"
 	"slices"
 
 	"github.com/Techzy-Programmer/d2m/config/flow"
@@ -16,7 +14,8 @@ import (
 func HandleDeployment(c *gin.Context) {
 	// Following check ensures that request only gets through if coming from GitHub actions workflow
 	// ToDo: Support custom CD servers and/or workflow runners
-	if !slices.Contains(vars.GHActionIps, c.ClientIP()) {
+	allowedIps := slices.Concat(vars.GHActionIps, vars.LocalIPs)
+	if !slices.Contains(allowedIps, c.ClientIP()) {
 		c.JSON(403, gin.H{
 			"message": "You are not allowed to access this resource",
 			"ok":      false,
@@ -24,8 +23,7 @@ func HandleDeployment(c *gin.Context) {
 		return
 	}
 
-	var b64BodyBits []byte
-	_, readErr := c.Request.Body.Read(b64BodyBits)
+	body, readErr := io.ReadAll(c.Request.Body)
 	if readErr != nil {
 		c.JSON(400, gin.H{
 			"message": "Invalid request body",
@@ -34,40 +32,10 @@ func HandleDeployment(c *gin.Context) {
 		return
 	}
 
-	var encBodyBits []byte
-	_, decodeErr := base64.StdEncoding.Decode(encBodyBits, b64BodyBits)
-	if decodeErr != nil {
-		c.JSON(400, gin.H{
-			"message": "Invalid request body",
-			"ok":      false,
-		})
-		return
-	}
-
-	if vars.PrivKey == nil {
-		paint.Error("Private key not yet configured")
-		c.JSON(500, gin.H{
-			"message": "Internal server error",
-			"code":    "private_key_error",
-			"ok":      false,
-		})
-		return
-	}
-
-	decBodyBits, decryptErr := rsa.DecryptPKCS1v15(nil, vars.PrivKey, encBodyBits)
-	if decryptErr != nil {
-		paint.Error("Error decrypting request body: ", decryptErr)
-		c.JSON(500, gin.H{
-			"message": "Internal server error",
-			"code":    "decryption_error",
-			"ok":      false,
-		})
-		return
-	}
+	defer c.Request.Body.Close()
 
 	// Deserialize the decrypted request body
-	var req types.DeploymentRequest
-	jsonErr := json.Unmarshal(decBodyBits, &req)
+	req, strategy, jsonErr := unmarshalDeploymentRequest(body)
 	if jsonErr != nil {
 		paint.Error("Error deserializing request body: ", jsonErr)
 		c.JSON(400, gin.H{
@@ -77,7 +45,17 @@ func HandleDeployment(c *gin.Context) {
 		return
 	}
 
-	flow.StartDeployment(&req) // ToDo: Make it concurrent
+	// ToDo: Make it concurrent
+	switch s := strategy.(type) {
+	case *types.RepoDeploymentStrategy:
+		flow.StartRepoDeployment(req, s)
+
+	case *types.EmptyDeploymentStrategy:
+		flow.StartEmptyDeployment(req, s)
+
+	case *types.DockerDeploymentStrategy:
+		// ToDo: Implement Docker deployment flow
+	}
 
 	c.JSON(200, gin.H{
 		"message": "Deployment triggered successfully",

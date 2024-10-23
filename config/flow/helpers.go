@@ -4,8 +4,10 @@ import (
 	"crypto/rand"
 	"errors"
 	"fmt"
+	"io"
 	"math/big"
 	"os"
+	"os/exec"
 	"os/user"
 	"path"
 	"runtime"
@@ -15,15 +17,51 @@ import (
 	"github.com/Techzy-Programmer/d2m/config/db"
 	"github.com/Techzy-Programmer/d2m/config/paint"
 	"github.com/Techzy-Programmer/d2m/config/types"
-	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing/transport"
-	"github.com/go-git/go-git/v5/plumbing/transport/http"
 )
 
 var currentDeployID uint
 var deployLogStorage []db.DeploymentLog
 var deploymentRunning bool = false
 var deployQueue []*types.DeploymentRequest
+
+func preInit(req *types.DeploymentRequest) (*db.Deployment, *deployLogHandler, string, error) {
+	if runtime.GOOS == "windows" {
+		req.LocalParentPath = strings.ReplaceAll(req.LocalParentPath, "/", "\\")
+	} else {
+		req.LocalParentPath = strings.ReplaceAll(req.LocalParentPath, "\\", "/")
+	}
+
+	deploymentRunning = true
+	currentDeployID = generateSecure4DigitNumber()
+
+	deployment := &db.Deployment{
+		ID:      currentDeployID,
+		StartAt: time.Now(),
+	}
+
+	depLogger := newDeployLogHandler("Warm Up", "Preparing for deployment...").
+		logStep(fmt.Sprintf("Starting deployment of with id \"%d\"", currentDeployID)).
+		logStep("Running pre-deployment checks...")
+
+	homeDir, hdirErr := getUserHomeDirectory(req.LocalUser)
+	if hdirErr != nil {
+		depLogger.logErr(fmt.Sprintf("Error getting home directory for local user \"%s\"", req.LocalUser)).save(errLvl)
+		paint.Error("Error getting user home directory: ", hdirErr)
+		return nil, nil, "", hdirErr
+	}
+
+	// Ensure the parent path exists
+	parentPath := path.Join(homeDir, req.LocalParentPath)
+	if info, ppErr := os.Stat(parentPath); os.IsNotExist(ppErr) || !info.IsDir() {
+		depLogger.logErr(fmt.Sprintf("Parent path \"%s\" does not exist or is not a directory", parentPath)).save(errLvl)
+		paint.Error("Parent path is not a valid directory: ", parentPath)
+		return nil, nil, "", ppErr
+	}
+
+	depLogger.logOk("[✓] Checks passing").save(okLvl)
+
+	return deployment, depLogger, parentPath, nil
+}
 
 func generateSecure4DigitNumber() uint {
 	min := 1000
@@ -44,21 +82,6 @@ const (
 	errLvl
 	okLvl
 )
-
-func getCommitData(repo *git.Repository) (string, string, error) {
-	ref, refErr := repo.Head()
-	if refErr != nil {
-		return "", "", refErr
-	}
-
-	commit, commitErr := repo.CommitObject(ref.Hash())
-	if commitErr != nil {
-		return "", "", commitErr
-	}
-
-	paint.Info("Latest commit: ", commit.Hash.String(), " by ", commit.Author.Name)
-	return commit.Hash.String(), commit.Message, nil
-}
 
 func getUserHomeDirectory(username string) (string, error) {
 	usr, err := user.Lookup(username)
@@ -96,97 +119,54 @@ func saveDeployment(deploy *db.Deployment, success *bool) {
 	deploy.EndAt = time.Now()
 
 	db.SaveDeployment(deploy)
+	deploymentRunning = false
 	deployLogStorage = []db.DeploymentLog{}
 }
 
-func ensureGHRepo(repoPth string, parentPath string, logger *deployLogHandler) (string, string, error) {
-	repoParts := strings.Split(repoPth, "/")
-	appName := repoParts[1]
-	appPth := path.Join(parentPath, appName)
-	authTok := db.GetConfig[string]("user.GHPAT")
-	var authOpt transport.AuthMethod = nil
+func execCmds(cmds []string, wdPath string, stopOnErr bool, logger *deployLogHandler) error {
+	for _, cmd := range cmds {
+		cmdParts := strings.Split(cmd, " ")
+		ex := exec.Command(cmdParts[0], cmdParts[1:]...)
+		ex.Dir = wdPath
 
-	if authTok != "" {
-		authOpt = &http.BasicAuth{
-			Username: repoParts[0],
-			Password: authTok,
+		stdoutPipe, _ := ex.StdoutPipe()
+		stderrPipe, _ := ex.StderrPipe()
+
+		logger.logStep(fmt.Sprintf("$ %s", cmd))
+		if startErr := ex.Start(); startErr != nil {
+			logger.logErr(fmt.Sprintf("[X] %v", startErr))
+
+			if stopOnErr {
+				return startErr
+			}
+
+			logger.logWarn("[!] Recovery, continuing deployment...")
+			paint.WarnF("Error starting command (%s): %v\n%s", cmd, startErr, "Continuing...")
+
+			continue
+		}
+
+		var stdoutBuilder, stderrBuilder strings.Builder
+		stdoutBytes, _ := io.ReadAll(stdoutPipe)
+		stdoutBuilder.Write(stdoutBytes)
+
+		stderrBytes, _ := io.ReadAll(stderrPipe)
+		stderrBuilder.Write(stderrBytes)
+		runErr := ex.Wait()
+
+		if runErr != nil {
+			logger.logErr(fmt.Sprintf("[X] %s (%v)", stderrBuilder.String(), runErr))
+
+			if stopOnErr {
+				return runErr
+			}
+
+			logger.logWarn("[!] Recovery, continuing deployment...")
+			paint.WarnF("Error running command (%s): %v\n%s", cmd, runErr, "Continuing...")
+		} else {
+			logger.logOk(fmt.Sprintf("[✓] %s", stdoutBuilder.String()))
 		}
 	}
 
-	if _, err := os.Stat(appPth); !os.IsNotExist(err) {
-		paint.Info("Repository already exists: ", appName)
-		repo, poErr := git.PlainOpen(appPth)
-		if poErr != nil {
-			logger.logErr("Error opening local repository at path: " + appPth)
-			return "", "", poErr
-		}
-
-		// Pull the latest changes
-		logger.logStep("Local repository available, pulling latest changes...")
-		paint.Info("Pulling latest changes for: ", appName)
-		hash, msg, pullErr := pullRepo(repo, authOpt)
-		if pullErr != nil {
-			logger.logErr("[X] Pull failed with error: " + pullErr.Error())
-			return "", "", pullErr
-		}
-
-		logger.logOk(fmt.Sprintf("[✓] Pull successful, commit hash: %s", hash))
-		return hash, msg, nil
-	}
-
-	// Clone the repository
-	paint.Info("Cloning repository: ", appName)
-	logger.logStep("Repository does not exist locally, cloning to path: " + appPth)
-	hash, msg, cloneErr := cloneRepo("https://github.com/"+repoPth+".git", appPth, authOpt)
-	if cloneErr != nil {
-		logger.logErr("[X] Clone failed with error: " + cloneErr.Error())
-		return "", "", cloneErr
-	}
-
-	logger.logOk(fmt.Sprintf("[✓] Clone successful, commit hash: %s", hash))
-	return hash, msg, nil
-}
-
-func cloneRepo(url string, path string, auth transport.AuthMethod) (string, string, error) {
-	repo, cloneErr := git.PlainClone(path, false, &git.CloneOptions{
-		URL:  url,
-		Auth: auth,
-	})
-
-	if cloneErr != nil {
-		return "", "", cloneErr
-	}
-
-	hash, msg, commitErr := getCommitData(repo)
-	if commitErr != nil {
-		return "", "", commitErr
-	}
-
-	return hash, msg, nil
-}
-
-func pullRepo(repo *git.Repository, auth transport.AuthMethod) (string, string, error) {
-	wt, err := repo.Worktree()
-	if err != nil {
-		return "", "", err
-	}
-
-	hash, msg, commitErr := getCommitData(repo)
-	if commitErr != nil {
-		return "", "", commitErr
-	}
-
-	pullErr := wt.Pull(&git.PullOptions{
-		Auth: auth,
-	})
-
-	if pullErr != nil {
-		if pullErr == git.NoErrAlreadyUpToDate {
-			return hash, msg, nil
-		}
-
-		return "", "", pullErr
-	}
-
-	return hash, msg, nil
+	return nil
 }

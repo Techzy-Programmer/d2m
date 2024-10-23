@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"io"
 	"strconv"
 
 	"github.com/Techzy-Programmer/d2m/config/db"
@@ -25,17 +26,16 @@ func HandleAuth(c *gin.Context) {
 		return
 	}
 
-	b64Payload := bodyAsText(c.Request)
-	decPayload, decErr := rsaDecryptWithPrivateKey(b64Payload)
-	if decErr != nil {
+	pwdBytes, rdErr := io.ReadAll(c.Request.Body)
+	if rdErr != nil {
 		c.JSON(400, gin.H{
-			"message": "Request payload was found defective",
+			"message": "Invalid request body",
 			"ok":      false,
 		})
 		return
 	}
 
-	compErr := bcrypt.CompareHashAndPassword([]byte(accessPwd), []byte(decPayload))
+	compErr := bcrypt.CompareHashAndPassword([]byte(accessPwd), pwdBytes)
 	if compErr != nil {
 		c.JSON(401, gin.H{
 			"message": "Credentials do not match",

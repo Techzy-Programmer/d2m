@@ -1,27 +1,14 @@
 package handler
 
 import (
-	"crypto/rand"
-	"crypto/rsa"
-	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
-	"net/http"
 	"time"
 
-	"github.com/Techzy-Programmer/d2m/config/vars"
+	"github.com/Techzy-Programmer/d2m/config/types"
 	"github.com/golang-jwt/jwt/v5"
 )
-
-func bodyAsText(req *http.Request) string {
-	body, err := io.ReadAll(req.Body)
-	if err != nil {
-		return ""
-	}
-
-	return string(body)
-}
 
 func getRelativeDuration(startTime int64) string {
 	now := time.Now().Unix()
@@ -53,20 +40,6 @@ func getRelativeDuration(startTime int64) string {
 	}
 }
 
-func rsaDecryptWithPrivateKey(b64Ciper string) (string, error) {
-	cipherBytes, b64Err := base64.StdEncoding.DecodeString(b64Ciper)
-	if b64Err != nil {
-		return "", errors.New("error decoding base64 string: " + b64Err.Error())
-	}
-
-	decryptedData, err := rsa.DecryptPKCS1v15(rand.Reader, vars.PrivKey, cipherBytes)
-	if err != nil {
-		return "", errors.New("error decrypting data: " + err.Error())
-	}
-
-	return string(decryptedData), nil
-}
-
 func generateJWTToken(secret string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.Claims(jwt.RegisteredClaims{
 		ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24 * 7)),
@@ -91,4 +64,34 @@ func verifyJWTToken(tokenString, secret string) (jwt.MapClaims, error) {
 	}
 
 	return claims, nil
+}
+
+func unmarshalDeploymentRequest(data []byte) (*types.DeploymentRequest, interface{}, error) {
+	var aux types.DeploymentRequest
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return nil, nil, errors.New("failed to unmarshal deployment request")
+	}
+
+	switch aux.StrategyType {
+	case "repo":
+		var repoStrategy = &types.RepoDeploymentStrategy{}
+		if err := json.Unmarshal(aux.Strategy, &repoStrategy); err != nil {
+			return nil, nil, errors.New("failed to unmarshal repo strategy")
+		}
+
+		return &aux, repoStrategy, nil
+
+	case "docker":
+		var dockerStrategy = &types.DockerDeploymentStrategy{}
+		if err := json.Unmarshal(aux.Strategy, &dockerStrategy); err != nil {
+			return nil, nil, errors.New("failed to unmarshal docker strategy")
+		}
+
+		return &aux, dockerStrategy, nil
+
+	case "empty", "":
+		return &aux, &types.EmptyDeploymentStrategy{}, nil
+	}
+
+	return nil, nil, errors.New("invalid deployment strategy type")
 }

@@ -2,7 +2,7 @@ import { Badge, Box, Button, Center, Group, PasswordInput, rem, Stack, Text } fr
 import { FileKey2, Upload, X, ChevronRight, LogIn } from "lucide-react";
 import { isFetchSuccess, showToast } from "../utils/general";
 import { Dropzone, FileWithPath } from '@mantine/dropzone';
-import useRSA from "../hooks/useRSAEncryption";
+import useEncryption from "../hooks/useEncryption";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../state/use-auth";
 import { useEffect, useState } from "react";
@@ -19,9 +19,9 @@ export default function Auth() {
   const [busy, setBusy] = useState(false);
   const [pubKey, setPubKey] = useState('');
   const [accessPwd, setAccessPwd] = useState('');
-  const { rsaEncError, encrypt } = useRSA(pubKey);
+  const { encError, encrypt } = useEncryption(pubKey);
   const { setPageTitle, setMetadata } = useMeta();
-  const hasRSAError = rsaEncError;
+  const hasRSAError = encError;
 
   useEffect(() => {
     if (pubKey === "") return;
@@ -37,8 +37,20 @@ export default function Auth() {
     if (hasRSAError || accessPwd === "") return;
     setBusy(true);
 
+    const payload = encrypt(accessPwd);
+
+    if (payload === null) {
+      setBusy(false);
+      return showToast({
+        title: "Encryption Failed",
+        message: "Internal encryption error",
+        status: "issue",
+      });
+    }
+
     const fetch = await fetchData<MetaResp>("/api/auth", {
-      body: encrypt(accessPwd),
+      headers: { "X-Encryption-Key": payload.encKey },
+      body: payload.encData,
       method: "POST",
     });
 
