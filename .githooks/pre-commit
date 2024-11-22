@@ -1,12 +1,17 @@
 #!/bin/sh
 
-# Execute following command to set the git hooks path for current repository
+# Execute the following command to set the git hooks path for the current repository
 # git config core.hooksPath .githooks
 
 unformatted=$(gofmt -l .)
+if [ $? -ne 0 ]; then
+  echo "Please check for syntax errors in your codebase and try again."
+  exit 1
+fi
+
 if [ -n "$unformatted" ]; then
   echo "Please run 'go fmt ./...' and try committing again."
-  echo "Following go files need formatting:"
+  echo "The following Go files need formatting:"
   echo ""
   echo "$unformatted"
   exit 1

@@ -18,13 +18,13 @@ func StartRepoDeployment(req *types.DeploymentRequest, ghSt *types.RepoDeploymen
 
 	success := false
 	dep.Branch = ghSt.Branch
-	dep.Repo = ghSt.RepoPath
+	dep.Repo = ghSt.Path
 	defer saveDeployment(dep, &success)
 
-	if req.PreDeployCmds != nil && len(req.PreDeployCmds) > 0 {
+	if len(req.PreDeployCmds) > 0 {
 		logger.reset("Pre-Deploy Commands", "Starting execution...")
 
-		preExErr := execCmds(req.PreDeployCmds, parentPath, req.FailOnCmdError, logger)
+		preExErr := execCmds(req.PreDeployCmds, parentPath, req.FailOnError, logger)
 		if preExErr != nil {
 			logger.logErr("[X] Fatal error running pre-deployment commands").save(errLvl)
 			paint.Error("Error running pre-deployment commands: ", preExErr)
@@ -37,7 +37,7 @@ func StartRepoDeployment(req *types.DeploymentRequest, ghSt *types.RepoDeploymen
 	logger.reset("Repository Fetch", "")
 
 	// Let's fetch the repo from GitHub
-	hash, msg, ghErr := ensureRepo(ghSt.RepoPath, parentPath, logger)
+	hash, msg, ghErr := ensureRepo(ghSt.Path, parentPath, logger)
 	if ghErr != nil {
 		logger.logErr("[X] Fatal error fetching remote repository").save(errLvl)
 		paint.Error("Error fetching GitHub repository: ", ghErr)
@@ -50,10 +50,10 @@ func StartRepoDeployment(req *types.DeploymentRequest, ghSt *types.RepoDeploymen
 
 	// ToDo: Implement AutoSetupDeps with smart inference
 
-	if req.PostDeployCmds != nil && len(req.PostDeployCmds) > 0 {
+	if len(req.PostDeployCmds) > 0 {
 		logger.reset("Post-Deploy Commands", "Starting execution...")
 
-		postExErr := execCmds(req.PostDeployCmds, parentPath, req.FailOnCmdError, logger)
+		postExErr := execCmds(req.PostDeployCmds, parentPath, req.FailOnError, logger)
 		if postExErr != nil {
 			logger.logErr("[X] Fatal error running post-deployment commands").save(errLvl)
 			paint.Error("Error running post-deployment commands: ", postExErr)

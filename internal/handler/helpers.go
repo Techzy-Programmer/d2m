@@ -81,6 +81,14 @@ func unmarshalDeploymentRequest(data []byte) (*types.DeploymentRequest, interfac
 
 		return &aux, repoStrategy, nil
 
+	case "dist":
+		var distStrategy = &types.DistDeploymentStrategy{}
+		if err := json.Unmarshal(aux.Strategy, &distStrategy); err != nil {
+			return nil, nil, errors.New("failed to unmarshal dist strategy")
+		}
+
+		return &aux, distStrategy, nil
+
 	case "docker":
 		var dockerStrategy = &types.DockerDeploymentStrategy{}
 		if err := json.Unmarshal(aux.Strategy, &dockerStrategy); err != nil {

@@ -50,6 +50,9 @@ func HandleDeployment(c *gin.Context) {
 	case *types.RepoDeploymentStrategy:
 		flow.StartRepoDeployment(req, s)
 
+	case *types.DistDeploymentStrategy:
+		flow.StartDistDeployment(req, s)
+
 	case *types.EmptyDeploymentStrategy:
 		flow.StartEmptyDeployment(req, s)
 

@@ -28,6 +28,7 @@ func StartWebServer(port string) {
 	{
 		api.Use(decryptionMiddleware())
 		api.POST("/deploy", handler.HandleDeployment)
+		api.PUT("/upload", handler.HandleUpload)
 		api.POST("/auth", handler.HandleAuth)
 		handlePostAuthAPI(*api.Group("/mg"))
 	}
