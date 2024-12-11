@@ -24,12 +24,15 @@ func StartWebServer(port string) {
 		})
 	})
 
-	api := router.Group("/api")
 	{
+		api := router.Group("/api")
 		api.Use(decryptionMiddleware())
+
 		api.POST("/deploy", handler.HandleDeployment)
+		api.POST("/health", handler.HandleHealth)
 		api.PUT("/upload", handler.HandleUpload)
 		api.POST("/auth", handler.HandleAuth)
+
 		handlePostAuthAPI(*api.Group("/mg"))
 	}
 

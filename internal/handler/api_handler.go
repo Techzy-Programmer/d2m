@@ -16,6 +16,15 @@ type meta struct {
 	Uptime  string `json:"uptime"`
 }
 
+func HandleHealth(c *gin.Context) {
+	c.JSON(200, gin.H{
+		"message": "d2m server is healthy",
+		"uptime":  getRelativeDuration(vars.StartedAt),
+		"version": vars.Version,
+		"ok":      true,
+	})
+}
+
 func HandleAuth(c *gin.Context) {
 	accessPwd := db.GetConfig("user.AccessPwd", "")
 	if accessPwd == "" {

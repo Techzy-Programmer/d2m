@@ -23,7 +23,7 @@ func decryptionMiddleware() gin.HandlerFunc {
 		encryptedKeyB64 := c.GetHeader("X-Encryption-Key")
 		if encryptedKeyB64 == "" {
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-				"message": "Request body is encrypted but missing encryption key",
+				"message": "Missing encryption key in request header",
 				"ok":      false,
 			})
 			return
