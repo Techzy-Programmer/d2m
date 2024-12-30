@@ -12,6 +12,7 @@ import (
 	"path"
 	"runtime"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/Techzy-Programmer/d2m/config/db"
@@ -127,6 +128,7 @@ func execCmds(cmds []string, wdPath string, stopOnErr bool, logger *deployLogHan
 	for _, cmd := range cmds {
 		cmdParts := strings.Split(cmd, " ")
 		ex := exec.Command(cmdParts[0], cmdParts[1:]...)
+		ex.SysProcAttr = getProcessAttributes()
 		ex.Dir = wdPath
 
 		stdoutPipe, _ := ex.StdoutPipe()
@@ -169,4 +171,19 @@ func execCmds(cmds []string, wdPath string, stopOnErr bool, logger *deployLogHan
 	}
 
 	return nil
+}
+
+func getProcessAttributes() *syscall.SysProcAttr {
+	switch runtime.GOOS {
+	case "windows":
+		return &syscall.SysProcAttr{
+			HideWindow:    true,
+			CreationFlags: 0x08000000,
+		}
+	default:
+		return &syscall.SysProcAttr{
+			// Unix-like systems typically don't need special flags
+			// for hiding the window or creating a new console
+		}
+	}
 }

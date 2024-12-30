@@ -20,7 +20,8 @@ type RepoDeploymentStrategy struct {
 }
 
 type DistDeploymentStrategy struct {
-	FileName string `json:"file_name"` // Name of the file just uploaded
+	FileName       string `json:"file_name"`        // Name of the file just uploaded
+	RootFolderName string `json:"root_folder_name"` // Name of the root folder where the contents will be extracted
 }
 
 type EmptyDeploymentStrategy struct{}
